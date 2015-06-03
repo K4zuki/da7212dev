@@ -24,18 +24,18 @@
 * THE SOFTWARE.
 *
 * @section DESCRIPTION
-*    Library for Texas instruments TLV320AIC23B library NXP LPC1768
+*    Library for Dialog Semiconductor DA7212 library NXP LPC1768
 *
 */ 
 
 #include "mbed.h"
-#include "TLV320.h"
+#include "DA7212.h"
 
-TLV320::TLV320(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws, PinName clk, PinName rx_sda, PinName rx_ws)
+DA7212::DA7212(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws, PinName clk, PinName rx_sda, PinName rx_ws)
                          : mAddr(addr), mI2c_(sda, scl), mI2s_(tx_sda, tx_ws, clk, rx_sda, rx_ws){
     mI2c_.frequency(150000);
     reset();                                //TLV resets
-    power(0x07);                            //Power Up the TLV320, but not the MIC, ADC and LINE
+    power(0x07);                            //Power Up the DA7212, but not the MIC, ADC and LINE
     format(16, STEREO);                     //16Bit I2S protocol format, STEREO
     frequency(44100);                       //Default sample frequency is 44.1kHz
     bypass(false);                          //Do not bypass device
@@ -53,7 +53,7 @@ TLV320::TLV320(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws
  * Parameters:      float leftVolumeIn, float rightVolumeIn
  * Returns:         int 0 (success), -1 (value out of range)
 ******************************************************/
-int TLV320::inputVolume(float leftVolumeIn, float rightVolumeIn){
+int DA7212::inputVolume(float leftVolumeIn, float rightVolumeIn){
     //check values are in range
     if((leftVolumeIn < 0.0)||leftVolumeIn > 1.0) return -1;
     if((rightVolumeIn < 0.0)||rightVolumeIn > 1.0) return -1;
@@ -78,7 +78,7 @@ int TLV320::inputVolume(float leftVolumeIn, float rightVolumeIn){
  * Parameters:      float leftVolumeOut, float rightVolumeOut
  * Returns:         int 0 (success), -1 (value out of range)
 ******************************************************/
-int TLV320::outputVolume(float leftVolumeOut, float rightVolumeOut){
+int DA7212::outputVolume(float leftVolumeOut, float rightVolumeOut){
     //check values are in range
     if((leftVolumeOut < 0.0)||leftVolumeOut > 1.0) return -1;
     if((rightVolumeOut < 0.0)||rightVolumeOut > 1.0) return -1;
@@ -98,12 +98,12 @@ int TLV320::outputVolume(float leftVolumeOut, float rightVolumeOut){
 /******************************************************
  * Function name:   bypass()
  *
- * Description:     Send TLV320 into bypass mode, i.e. connect input to output 
+ * Description:     Send DA7212 into bypass mode, i.e. connect input to output 
  *
  * Parameters:      bool bypassVar
  * Returns:         none
 ******************************************************/
-void TLV320::bypass(bool bypassVar){
+void DA7212::bypass(bool bypassVar){
     if(bypassVar == true)
         cmd[1] = (1 << 3) | (0 << 4) | (0 << 5);//bypass enabled, DAC disabled, sidetone insertion disabled
     else
@@ -115,12 +115,12 @@ void TLV320::bypass(bool bypassVar){
 /******************************************************
  * Function name:   mute()
  *
- * Description:     Send TLV320 into mute mode
+ * Description:     Send DA7212 into mute mode
  *
  * Parameters:      bool softMute
  * Returns:         none
 ******************************************************/
-void TLV320::mute(bool softMute){   
+void DA7212::mute(bool softMute){   
     if(softMute == true) cmd[1] = 0x08;         //set instruction to mute
     else cmd[1] = 0x00;                         //set instruction to NOT mute
      
@@ -130,12 +130,12 @@ void TLV320::mute(bool softMute){
 /******************************************************
  * Function name:   power()
  *
- * Description:     Switch TLV320 on/off
+ * Description:     Switch DA7212 on/off
  *
  * Parameters:      bool powerUp
  * Returns:         none
 ******************************************************/      
-void TLV320::power(bool powerUp){
+void DA7212::power(bool powerUp){
     if(powerUp == true) cmd[1] = 0x00;          //everything on
     else cmd[1] = 0xFF;                         //everything off
     
@@ -145,12 +145,12 @@ void TLV320::power(bool powerUp){
 /******************************************************
  * Function name:   power()
  *
- * Description:     Switch on individual devices on TLV320
+ * Description:     Switch on individual devices on DA7212
  *
  * Parameters:      int device
  * Returns:         none
 ******************************************************/
-void TLV320::power(int device){
+void DA7212::power(int device){
     cmd[1] = (char)device;                      //set user defined commands
     cmd[0] = POWER_DOWN_CONTROL;                //set address
     mI2c_.write(mAddr, cmd, 2);                 //send
@@ -163,7 +163,7 @@ void TLV320::power(int device){
  * Parameters:      char length, bool mode
  * Returns:         none
 ******************************************************/      
-void TLV320::format(char length, bool mode){  
+void DA7212::format(char length, bool mode){  
     char modeSet = (1 << 6);   
     modeSet |= (1 << 5);                        //swap left and right channels
     
@@ -196,7 +196,7 @@ void TLV320::format(char length, bool mode){
  * Parameters:      int hz
  * Returns:         int 0 (success), -1 (value not recognised)
 ******************************************************/
-int TLV320::frequency(int hz){
+int DA7212::frequency(int hz){
     char rate;
     switch(hz){
         case 8000:
@@ -234,12 +234,12 @@ int TLV320::frequency(int hz){
 /******************************************************
  * Function name:   reset()
  *
- * Description:     Reset TLV320
+ * Description:     Reset DA7212
  *
  * Parameters:      none
  * Returns:         none
 ******************************************************/        
-void TLV320::reset(void){
+void DA7212::reset(void){
     cmd[0] = RESET_REGISTER;                //set address
     cmd[1] = 0x00;                          //this resets the entire device
     mI2c_.write(mAddr, cmd, 2);               
@@ -252,7 +252,7 @@ void TLV320::reset(void){
  * Parameters:      int mode
  * Returns:         none
 ******************************************************/
-void TLV320::start(int mode){
+void DA7212::start(int mode){
     mI2s_.start(mode);
 }
 /******************************************************
@@ -263,7 +263,7 @@ void TLV320::start(int mode){
  * Parameters:      none
  * Returns:         none
 ******************************************************/
-void TLV320::stop(void){
+void DA7212::stop(void){
     mI2s_.stop();
 }
 /******************************************************
@@ -274,7 +274,7 @@ void TLV320::stop(void){
  * Parameters:      int *buffer, int from, int length
  * Returns:         none
 ******************************************************/
-void TLV320::write(int *buffer, int from, int length){
+void DA7212::write(int *buffer, int from, int length){
     mI2s_.write(buffer, from, length);
 }
 /******************************************************
@@ -285,7 +285,7 @@ void TLV320::write(int *buffer, int from, int length){
  * Parameters:      none
  * Returns:         none
 ******************************************************/
-void TLV320::read(void){
+void DA7212::read(void){
     mI2s_.read();
 }
 /******************************************************
@@ -296,7 +296,7 @@ void TLV320::read(void){
  * Parameters:      none
  * Returns:         none
 ******************************************************/
-void TLV320::attach(void(*fptr)(void)){
+void DA7212::attach(void(*fptr)(void)){
     mI2s_.attach(fptr);
 }
 //Private Functions
@@ -308,7 +308,7 @@ void TLV320::attach(void(*fptr)(void)){
  * Parameters:      char rate, bool clockIn, bool clockMode, bool bOSR
  * Returns:         none
 ******************************************************/
-void TLV320::setSampleRate_(char rate, bool clockIn, bool clockMode, bool bOSR){
+void DA7212::setSampleRate_(char rate, bool clockIn, bool clockMode, bool bOSR){
     char clockInChar;
     char clockModeChar;
     char baseOverSamplingRate;
@@ -339,7 +339,7 @@ void TLV320::setSampleRate_(char rate, bool clockIn, bool clockMode, bool bOSR){
  * Parameters:      none
  * Returns:         none
 ******************************************************/
-void TLV320::activateDigitalInterface_(void){
+void DA7212::activateDigitalInterface_(void){
     cmd[1] = 0x01;                          //Activate  
     cmd[0] = DIGITAL_INTERFACE_ACTIVATION;  //set address
     mI2c_.write(mAddr, cmd, 2);             //send
@@ -353,7 +353,7 @@ void TLV320::activateDigitalInterface_(void){
  * Returns:         none
 ******************************************************/
 //Digital interface deactivation 
-void TLV320::deactivateDigitalInterface_(void){
+void DA7212::deactivateDigitalInterface_(void){
     cmd[1] = 0x00;                          //Deactivate
     cmd[0] = DIGITAL_INTERFACE_ACTIVATION;  //set address
     mI2c_.write(mAddr, cmd, 2);             //send
