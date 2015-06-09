@@ -33,8 +33,8 @@
 
 DA7212::DA7212(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws, PinName clk, PinName rx_sda, PinName rx_ws)
                          : mAddr(addr), mI2c_(sda, scl), mI2s_(tx_sda, tx_ws, clk, rx_sda, rx_ws){
-    mI2c_.frequency(150000);
-    reset();                                //TLV resets
+    mI2c_.frequency(200000);                //200KHz
+    reset();                                //DA7212 resets
     power(0x07);                            //Power Up the DA7212, but not the MIC, ADC and LINE
     format(16, STEREO);                     //16Bit I2S protocol format, STEREO
     frequency(44100);                       //Default sample frequency is 44.1kHz
@@ -136,11 +136,17 @@ void DA7212::mute(bool softMute){
  * Returns:         none
 ******************************************************/      
 void DA7212::power(bool powerUp){
-    if(powerUp == true) cmd[1] = 0x00;          //everything on
-    else cmd[1] = 0xFF;                         //everything off
-    
-    cmd[0] = POWER_DOWN_CONTROL;                //set address
-    mI2c_.write(mAddr, cmd, 2);                  //send
+//Line input        0x00 = Off 0x36 = On 0x50
+//Headphone out     0x00 = Off 0x30 = On 0x51
+    if(powerUp == true){
+        cmd[1] = 0xFF;                          //everything on
+    }else{
+        cmd[1] = 0x00;                          //everything off
+    }
+    cmd[0] = POWER_DOWN_CONTROL;                //set address 0x50
+    mI2c_.write(mAddr, cmd, 2);                 //send
+    cmd[0] = POWER_DOWN_CONTROL+1;              //set address 0x51
+    mI2c_.write(mAddr, cmd, 2);                 //send
 }
 /******************************************************
  * Function name:   power()
@@ -152,7 +158,7 @@ void DA7212::power(bool powerUp){
 ******************************************************/
 void DA7212::power(int device){
     cmd[1] = (char)device;                      //set user defined commands
-    cmd[0] = POWER_DOWN_CONTROL;                //set address
+    cmd[0] = POWER_DOWN_CONTROL;                //set address 0x50
     mI2c_.write(mAddr, cmd, 2);                 //send
 }
 /******************************************************
@@ -164,22 +170,22 @@ void DA7212::power(int device){
  * Returns:         none
 ******************************************************/      
 void DA7212::format(char length, bool mode){  
-    char modeSet = (1 << 6);   
-    modeSet |= (1 << 5);                        //swap left and right channels
+    char modeSet = (1 << 7);   
+    modeSet |= (1 << 6);                        //swap left and right channels
     
     switch (length)                             //input data into instruction byte
     {
         case 16:
-            cmd[1] = modeSet | 0x02; 
+            cmd[1] = modeSet | 0x00; 
             break;
         case 20:
-            cmd[1] = modeSet | 0x06;
+            cmd[1] = modeSet | 0x04;
             break;
         case 24:
-            cmd[1] = modeSet | 0x0A;
+            cmd[1] = modeSet | 0x08;
             break;
         case 32:
-            cmd[1] = modeSet | 0x0E;
+            cmd[1] = modeSet | 0x0C;
             break;
         default:
             break;
