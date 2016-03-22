@@ -1,9 +1,9 @@
 /**
-* @author Ioannis Kedros, Daniel Worrall
+* @author Giles Barton-Owen
 *
 * @section LICENSE
 *
-* Copyright (c) 2011 mbed
+* Copyright (c) 2016 k4zuki
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -24,344 +24,403 @@
 * THE SOFTWARE.
 *
 * @section DESCRIPTION
-*    Library for Dialog Semiconductor DA7212 library NXP LPC1768
+*    A Driver set for the I2C half of the DA7212
 *
 */ 
 
-#include "mbed.h"
 #include "DA7212.h"
 
-DA7212::DA7212(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws, PinName clk, PinName rx_sda, PinName rx_ws)
-                         : mAddr(addr), mI2c_(sda, scl), mI2s_(tx_sda, tx_ws, clk, rx_sda, rx_ws){
-    mI2c_.frequency(200000);                //200KHz
-    reset();                                //DA7212 resets
-    power(0x07);                            //Power Up the DA7212, but not the MIC, ADC and LINE
-    format(16, STEREO);                     //16Bit I2S protocol format, STEREO
-    frequency(44100);                       //Default sample frequency is 44.1kHz
-    bypass(false);                          //Do not bypass device
-    mute(false);                            //Not muted
-    activateDigitalInterface_();            //The digital part of the chip is active
-    outputVolume(0.7, 0.7);                 //Headphone volume to the default state
-    rxBuffer = &mI2s_.rxBuffer[0];
-} 
-//Public Functions
-/******************************************************
- * Function name:   inputVolume()
- *
- * Description:     set line in volume for left and right channels
- *
- * Parameters:      float leftVolumeIn, float rightVolumeIn
- * Returns:         int 0 (success), -1 (value out of range)
-******************************************************/
-int DA7212::inputVolume(float leftVolumeIn, float rightVolumeIn){
-    //check values are in range
-    if((leftVolumeIn < 0.0)||leftVolumeIn > 1.0) return -1;
-    if((rightVolumeIn < 0.0)||rightVolumeIn > 1.0) return -1;
-    //convert float to encoded char
-    char left = (char)31*leftVolumeIn;          
-    char right = (char)31*rightVolumeIn;
-    //Left Channel
-    cmd[1] = left | (0 << 7);                           //set volume
-    cmd[0] = LEFT_LINE_INPUT_CHANNEL_VOLUME_CONTROL;    //set address
-    mI2c_.write(mAddr, cmd, 2);                         //send
-    //Right Channel
-    cmd[1] = right | (0 << 7);                          //set volume
-    cmd[0] = RIGHT_LINE_INPUT_CHANNEL_VOLUME_CONTROL;   //set address
-    mI2c_.write(mAddr, cmd, 2);                         //send
-    return 0;
+#define DA7212_HP_VOL_DF_MASK 0x80
+
+
+#define DA7212_DF_hp_vol_left     0.5
+#define DA7212_DF_hp_vol_right     0.5
+#define DA7212_DF_li_vol_left     0.5
+#define DA7212_DF_li_vol_right    0.5
+#define DA7212_DF_sdt_vol         0
+
+const uint8_t base_address = 0x1A; //0x34 in 8bit address
+
+
+DA7212::DA7212(PinName i2c_sda, PinName i2c_scl): i2c(i2c_sda,i2c_scl)  {
+    address = base_address;
+    defaulter();
+    form_cmd(all);
 }
-/******************************************************
- * Function name:   outputVolume()
- *
- * Description:     Set headphone (line out) volume for left an right channels
- *
- * Parameters:      float leftVolumeOut, float rightVolumeOut
- * Returns:         int 0 (success), -1 (value out of range)
-******************************************************/
-int DA7212::outputVolume(float leftVolumeOut, float rightVolumeOut){
-    //check values are in range
-    if((leftVolumeOut < 0.0)||leftVolumeOut > 1.0) return -1;
-    if((rightVolumeOut < 0.0)||rightVolumeOut > 1.0) return -1;
-    //convert float to encoded char
-    char left = (char)(79*leftVolumeOut)+0x30;
-    char right = (char)(79*rightVolumeOut)+0x30;
-    //Left Channel
-    cmd[1] = left | (1 << 7);                           //set volume
-    cmd[0] = LEFT_CHANNEL_HEADPHONE_VOLUME_CONTROL;     //set address
-    mI2c_.write(mAddr, cmd, 2);                         //send
-    //Right Channel
-    cmd[1] = right | (1 << 7);                          //set volume
-    cmd[0] = RIGHT_CHANNEL_HEADPHONE_VOLUME_CONTROL;    //set address
-    mI2c_.write(mAddr, cmd, 2);                         //send
-    return 0;
+
+DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level): i2c(i2c_sda,i2c_scl)  {
+    address = base_address + (1*cs_level);
+    defaulter();
+    form_cmd(all);
 }
-/******************************************************
- * Function name:   bypass()
- *
- * Description:     Send DA7212 into bypass mode, i.e. connect input to output 
- *
- * Parameters:      bool bypassVar
- * Returns:         none
-******************************************************/
-void DA7212::bypass(bool bypassVar){
-    if(bypassVar == true)
-        cmd[1] = (1 << 3) | (0 << 4) | (0 << 5);//bypass enabled, DAC disabled, sidetone insertion disabled
-    else
-        cmd[1] = (0 << 3) | (1 << 4);           //bypass disabled, DAC enabled
-    cmd[1] |= (0 << 2);
-    cmd[0] = ANALOG_AUDIO_PATH_CONTROL;         //set address
-    mI2c_.write(mAddr, cmd, 2);                 //send
+
+void DA7212::power(bool on_off) {
+    device_all_pwr = on_off;
+    form_cmd(power_control);
 }
-/******************************************************
- * Function name:   mute()
- *
- * Description:     Send DA7212 into mute mode
- *
- * Parameters:      bool softMute
- * Returns:         none
-******************************************************/
-void DA7212::mute(bool softMute){   
-    if(softMute == true) cmd[1] = 0x08;         //set instruction to mute
-    else cmd[1] = 0x00;                         //set instruction to NOT mute
-     
-    cmd[0] = DIGITAL_AUDIO_PATH_CONTROL;        //set address  
-    mI2c_.write(mAddr, cmd, 2);                 //send
-}    
-/******************************************************
- * Function name:   power()
- *
- * Description:     Switch DA7212 on/off
- *
- * Parameters:      bool powerUp
- * Returns:         none
-******************************************************/      
-void DA7212::power(bool powerUp){
-//Line input        0x00 = Off 0x36 = On 0x50
-//Headphone out     0x00 = Off 0x30 = On 0x51
-    if(powerUp == true){
-        cmd[1] = 0xFF;                          //everything on
-    }else{
-        cmd[1] = 0x00;                          //everything off
-    }
-    cmd[0] = POWER_DOWN_CONTROL;                //set address 0x50
-    mI2c_.write(mAddr, cmd, 2);                 //send
-    cmd[0] = POWER_DOWN_CONTROL+1;              //set address 0x51
-    mI2c_.write(mAddr, cmd, 2);                 //send
-}
-/******************************************************
- * Function name:   power()
- *
- * Description:     Switch on individual devices on DA7212
- *
- * Parameters:      int device
- * Returns:         none
-******************************************************/
-void DA7212::power(int device){
-    cmd[1] = (char)device;                      //set user defined commands
-    cmd[0] = POWER_DOWN_CONTROL;                //set address 0x50
-    mI2c_.write(mAddr, cmd, 2);                 //send
-}
-/******************************************************
- * Function name:   format()
- *
- * Description:     Set interface format
- *
- * Parameters:      char length, bool mode
- * Returns:         none
-******************************************************/      
-void DA7212::format(char length, bool mode){  
-    char modeSet = (1 << 7);   
-    modeSet |= (1 << 6);                        //swap left and right channels
-    
-    switch (length)                             //input data into instruction byte
+
+void DA7212::input_select(int input) {
+
+    switch(input)
     {
-        case 16:
-            cmd[1] = modeSet | 0x00; 
+        case DA7212_NO_IN:
+            device_adc_pwr = false;
+            device_mic_pwr = false;
+            device_lni_pwr = false;
+            form_cmd(power_control);
             break;
-        case 20:
-            cmd[1] = modeSet | 0x04;
+        case DA7212_LINE:
+            device_adc_pwr = true;
+            device_lni_pwr = true;
+            device_mic_pwr = false;
+            ADC_source = DA7212_LINE;
+            form_cmd(power_control);
+            form_cmd(path_analog);
             break;
-        case 24:
-            cmd[1] = modeSet | 0x08;
-            break;
-        case 32:
-            cmd[1] = modeSet | 0x0C;
+        case DA7212_MIC:
+            device_adc_pwr = true;
+            device_lni_pwr = false;
+            device_mic_pwr = true;
+            ADC_source = DA7212_MIC;
+            form_cmd(power_control);
+            form_cmd(path_analog);
             break;
         default:
+            device_adc_pwr     = df_device_adc_pwr;
+            device_mic_pwr     = df_device_mic_pwr;
+            device_lni_pwr     = df_device_lni_pwr;
+            ADC_source         = df_ADC_source;
+            form_cmd(power_control);
+            form_cmd(path_analog);
             break;
     }
-    mI2s_.format(length, mode);
-    cmd[0] = DIGITAL_AUDIO_INTERFACE_FORMAT;        //set address
-    mI2c_.write(mAddr, cmd, 2);                     //send
+    ADC_source_old = ADC_source;
 }
-/******************************************************
- * Function name:   frequency()
- *
- * Description:     Set sample frequency
- *
- * Parameters:      int hz
- * Returns:         int 0 (success), -1 (value not recognised)
-******************************************************/
-int DA7212::frequency(int hz){
-    char rate;
-    switch(hz){
-        case 8000:
-            rate = 0x03; 
+
+void DA7212::headphone_volume(float h_volume) {
+    hp_vol_left = h_volume;
+    hp_vol_right = h_volume;
+    form_cmd(headphone_vol_left);
+    form_cmd(headphone_vol_right);
+}
+
+void DA7212::linein_volume(float li_volume) {
+    li_vol_left = li_volume;
+    li_vol_right = li_volume;
+    form_cmd(line_in_vol_left);
+    form_cmd(line_in_vol_right);
+}
+
+void DA7212::microphone_boost(bool mic_boost) {
+    mic_boost_ = mic_boost;
+}
+
+void DA7212::input_mute(bool mute) {
+    if(ADC_source == DA7212_MIC)
+    {
+        mic_mute = mute;
+        form_cmd(path_analog);
+    }
+    else
+    {
+        li_mute_left = mute;
+        li_mute_right = mute;
+        form_cmd(line_in_vol_left);
+        form_cmd(line_in_vol_right);
+    }
+}
+
+void DA7212::output_mute(bool mute) {
+    out_mute = mute;
+    form_cmd(path_digital);
+}
+
+void DA7212::input_power(bool on_off) {
+    
+    device_adc_pwr = on_off;
+    
+    if(ADC_source == DA7212_MIC)
+    {
+        device_mic_pwr = on_off;
+        device_lni_pwr = false;
+    }
+    else
+    {
+        device_mic_pwr = false;
+        device_lni_pwr = on_off;
+    }
+    
+    form_cmd(power_control);
+}
+
+void DA7212::output_power(bool on_off) {
+    device_dac_pwr = on_off;
+    device_out_pwr = on_off;
+    
+    form_cmd(power_control);
+}
+
+void DA7212::wordsize(int words) {
+    device_bitlength = words;
+    form_cmd(interface_format);
+}
+
+void DA7212::master(bool master) {
+    device_master = master;
+    form_cmd(interface_format);
+}
+
+void DA7212::frequency(int freq) {
+    ADC_rate = freq;
+    DAC_rate = freq;
+    form_cmd(sample_rate);
+}
+
+void DA7212::input_highpass(bool enabled) {
+    ADC_highpass_enable = enabled;
+    form_cmd(path_digital);
+}
+
+void DA7212::output_softmute(bool enabled) {
+    out_mute = enabled;
+    form_cmd(path_digital);
+}
+
+void DA7212::interface_switch(bool on_off) {
+    device_interface_active = on_off;
+    form_cmd(interface_activation);
+}
+
+void DA7212::sidetone(float sidetone_vol) {
+    sdt_vol = sidetone_vol;
+    form_cmd(path_analog);
+}
+
+void DA7212::deemphasis(char code) {
+    de_emph_code = code & 0x03;
+    form_cmd(path_digital);
+}
+
+void DA7212::reset() {
+    form_cmd(reset_reg);
+}
+
+void DA7212::start() {
+    interface_switch(true);
+}
+
+void DA7212::bypass(bool enable) {
+    bypass_ = enable;
+    form_cmd(path_analog);
+}
+
+void DA7212::stop() {
+    interface_switch(false);
+}
+
+void DA7212::command(reg_address add, uint16_t cmd) {
+    char temp[2];
+    temp[0] = (char(add)<<1) | ((cmd >> 6) & 0x01);
+    temp[1] = (cmd & 0xFF);
+    i2c.write((address<<1), temp, 2);
+}
+
+void DA7212::form_cmd(reg_address add) {
+    uint16_t cmd = 0;
+    int temp = 0;
+    bool mute;
+    switch(add)
+    {
+        case line_in_vol_left:
+            temp = int(li_vol_left * 32) - 1;
+            mute = li_mute_left;
+            
+            if(temp < 0) 
+            {
+                temp = 0; 
+                mute = true;
+            }
+            cmd = temp & 0x1F;
+            cmd |= mute << 7;
             break;
-        case 8021:
-            rate = 0x0B;
+        case line_in_vol_right:
+            temp = int(li_vol_right * 32) - 1;
+            mute = li_mute_right;
+            if(temp < 0) 
+            {
+                temp = 0; 
+                mute = true;
+            }
+            cmd = temp & 0x1F;
+            cmd |= mute << 7;
             break;
-        case 32000:
-            rate = 0x06;
+            
+        case headphone_vol_left:
+            temp = int(hp_vol_left * 80) + 47;
+            cmd = DA7212_HP_VOL_DF_MASK;
+            cmd |= temp & 0x7F;
             break;
-        case 44100:
-            rate = 0x08; 
+        case headphone_vol_right:
+            temp = int(hp_vol_right * 80) + 47;
+            cmd = DA7212_HP_VOL_DF_MASK;
+            cmd |= temp & 0x7F;
+            break;
+        
+        case path_analog:
+            temp = int(sdt_vol * 5);
+            char vol_code = 0;
+            switch(temp)
+            {
+                case 5:
+                    vol_code = 0x0C;
+                    break;
+                case 0:
+                    vol_code = 0x00;
+                    break;
+                default:
+                    vol_code = ((0x04 - temp)&0x07) | 0x08;
+                    break;
+            }
+            cmd = vol_code << 5;
+            cmd |= 1 << 4;
+            cmd |= bypass_ << 3;
+            cmd |= ADC_source << 2;
+            cmd |= mic_mute << 1;
+            cmd |= mic_boost_;
+            break;
+            
+        case path_digital:
+            cmd |= out_mute << 3;
+            cmd |= ((de_emph_code & 0x3) << 1);
+            cmd |= ADC_highpass_enable;
+            break;
+        
+        case power_control:
+            cmd |= !device_all_pwr << 7;
+            cmd |= !device_clk_pwr << 6;
+            cmd |= !device_osc_pwr << 5;
+            cmd |= !device_out_pwr << 4;
+            cmd |= !device_dac_pwr << 3;
+            cmd |= !device_adc_pwr << 2;
+            cmd |= !device_mic_pwr << 1;
+            cmd |= !device_lni_pwr << 0;
+            break;
+            
+        case interface_format:
+            cmd |= device_master << 6;
+            cmd |= device_lrswap << 5;
+            cmd |= device_lrws     << 4;
+            temp = 0;
+            switch(device_bitlength)
+            {
+                case 16:
+                    temp = 0;
+                    break;
+                case 20:
+                    temp =  1;
+                    break;
+                case 24:
+                    temp = 2;
+                    break;
+                case 32:
+                    temp = 3;
+                    break;
+            }
+            cmd |= (temp & 0x03) << 2;
+            cmd |= (device_data_form & 0x03);
+            break;
+        
+        case sample_rate:
+            temp = gen_samplerate();
+            cmd = device_usb_mode;
+            cmd |= (temp & 0x03) << 1;
+            cmd |= device_clk_in_div << 6;
+            cmd |= device_clk_out_div << 7;
+            break;
+            
+        case interface_activation:
+            cmd = device_interface_active;
+            break;
+            
+        case reset_reg:
+            cmd = 0;
+            break;
+        
+        case all:
+            for( int i = line_in_vol_left; i <= reset_reg; i++)
+            {
+                form_cmd((reg_address)i);
+            }
+            break;
+    }
+    if(add != all) command(add , cmd);
+}
+
+void DA7212::defaulter() {
+    hp_vol_left = DA7212_DF_hp_vol_left;
+    hp_vol_right = DA7212_DF_hp_vol_right;
+    li_vol_left = DA7212_DF_li_vol_left;
+    li_vol_right = DA7212_DF_li_vol_right;
+    sdt_vol = DA7212_DF_sdt_vol;
+    bypass_ = df_bypass_;
+    
+    ADC_source = df_ADC_source;
+    ADC_source_old = df_ADC_source;
+    
+    mic_mute = df_mic_mute;
+    li_mute_left = df_li_mute_left;
+    li_mute_right = df_li_mute_right;
+    
+    
+    mic_boost_ = df_mic_boost_;
+    out_mute = df_out_mute;
+    de_emph_code = df_de_emph_code;
+    ADC_highpass_enable = df_ADC_highpass_enable;
+    
+    device_all_pwr = df_device_all_pwr;
+    device_clk_pwr = df_device_clk_pwr;
+    device_osc_pwr = df_device_osc_pwr;
+    device_out_pwr = df_device_out_pwr;
+    device_dac_pwr = df_device_dac_pwr;
+    device_adc_pwr = df_device_dac_pwr;
+    device_mic_pwr = df_device_mic_pwr;
+    device_lni_pwr = df_device_lni_pwr;
+    
+    device_master         = df_device_master;
+    device_lrswap         = df_device_lrswap;
+    device_lrws         = df_device_lrws;
+    device_bitlength      = df_device_bitlength;
+
+    
+    ADC_rate  = df_ADC_rate;
+    DAC_rate  = df_DAC_rate;
+
+    device_interface_active  = df_device_interface_active;
+}
+
+char DA7212::gen_samplerate() {
+    char temp = 0;
+    switch(ADC_rate)
+    {
+        case 96000:
+            temp = 0x0E;
             break;
         case 48000:
-            rate = 0x00; 
+            temp = 0x00;
+            if(DAC_rate == 8000) temp = 0x02;
             break;
-        case 88200:
-            rate = 0x0F;  
+        case 32000:
+            temp = 0x0C;
             break;
-        case 96000:
-            rate = 0x07;
+        case 8000:
+            temp = 0x03;
+            if(DAC_rate == 48000) temp = 0x04;
             break;
         default:
-            return -1;
+            temp = 0x00;
+            break;
     }
-    char clockInChar = (0 << 6);
-    char clockModeChar = (1 << 0);
+    return temp;
+}
 
-    cmd[1] = (rate << 2) | clockInChar | clockModeChar;      //input data into instruciton byte
-    cmd[0] = SAMPLE_RATE_CONTROL;           //set address  
-    mI2c_.write(mAddr, cmd, 2);              //send
-    return 0;
-}   
-/******************************************************
- * Function name:   reset()
- *
- * Description:     Reset DA7212
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/        
-void DA7212::reset(void){
-    cmd[0] = RESET_REGISTER;                //set address
-    cmd[1] = 0x00;                          //this resets the entire device
-    mI2c_.write(mAddr, cmd, 2);               
-}
-/******************************************************
- * Function name:   start()
- *
- * Description:     Enable interrupts on the I2S port
- *
- * Parameters:      int mode
- * Returns:         none
-******************************************************/
-void DA7212::start(int mode){
-    mI2s_.start(mode);
-}
-/******************************************************
- * Function name:   stop()
- *
- * Description:     Disable interrupts on the I2S port
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/
-void DA7212::stop(void){
-    mI2s_.stop();
-}
-/******************************************************
- * Function name:   write()
- *
- * Description:     Write (part of) a buffer to the I2S port
- *
- * Parameters:      int *buffer, int from, int length
- * Returns:         none
-******************************************************/
-void DA7212::write(int *buffer, int from, int length){
-    mI2s_.write(buffer, from, length);
-}
-/******************************************************
- * Function name:   read()
- *
- * Description:     Place I2SRXFIFO in rxBuffer
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/
-void DA7212::read(void){
-    mI2s_.read();
-}
-/******************************************************
- * Function name:   attach()
- *
- * Description:     Attach a void/void function or void/void static member function to IRQHandler
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/
-void DA7212::attach(void(*fptr)(void)){
-    mI2s_.attach(fptr);
-}
-//Private Functions
-/******************************************************
- * Function name:   setSampleRate_()
- *
- * Description:     Clocking control
- *
- * Parameters:      char rate, bool clockIn, bool clockMode, bool bOSR
- * Returns:         none
-******************************************************/
-void DA7212::setSampleRate_(char rate, bool clockIn, bool clockMode, bool bOSR){
-    char clockInChar;
-    char clockModeChar;
-    char baseOverSamplingRate;
-    if(bOSR){
-        baseOverSamplingRate = (1 << 0);
-    } else {
-        baseOverSamplingRate = (0 << 0);
-    }
-    if(clockIn){
-        clockInChar = (1 << 6);
-    } else {
-        clockInChar = (0 << 6);
-    }
-    if(clockMode){
-        clockModeChar = 0x01;
-    } else {
-        clockModeChar = 0x00;
-    }
-    cmd[1] = (rate << 2) | clockInChar | clockModeChar | baseOverSamplingRate;      //input data into instruciton byte
-    cmd[0] = SAMPLE_RATE_CONTROL;               //set address  
-    mI2c_.write(mAddr, cmd, 2);                 //send
-}
-/******************************************************
- * Function name:   activateDigitalInterface_()
- *
- * Description:     Activate digital part of chip
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/
-void DA7212::activateDigitalInterface_(void){
-    cmd[1] = 0x01;                          //Activate  
-    cmd[0] = DIGITAL_INTERFACE_ACTIVATION;  //set address
-    mI2c_.write(mAddr, cmd, 2);             //send
-}
-/******************************************************
- * Function name:   deactivateDigitalInterface_
- *
- * Description:     Deactivate digital part of chip
- *
- * Parameters:      none
- * Returns:         none
-******************************************************/
-//Digital interface deactivation 
-void DA7212::deactivateDigitalInterface_(void){
-    cmd[1] = 0x00;                          //Deactivate
-    cmd[0] = DIGITAL_INTERFACE_ACTIVATION;  //set address
-    mI2c_.write(mAddr, cmd, 2);             //send
-}
 

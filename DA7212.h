@@ -1,9 +1,9 @@
 /**
-* @author Ioannis Kedros, Daniel Worrall
+* @author Giles Barton-Owen
 *
 * @section LICENSE
 *
-* Copyright (c) 2011 mbed
+* Copyright (c) 2016 k4zuki
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -24,194 +24,297 @@
 * THE SOFTWARE.
 *
 * @section DESCRIPTION
-*    Library for Dialog Semiconductor DA7212 library NXP LPC1768
+*    A Driver set for the I2C half of the DA7212
 *
 */
 
-#ifndef MBED_DA7212_H
-#define MBED_DA7212_H
 
+#ifndef DA7212_H
+#define DA7212_H
 #include "mbed.h"
-#include "I2SSlave.h"
 
-/** DA7212 class, defined on the I2C master bus
-*   AUX in, Headphone(headset) out
-*   24.576MHz PLL input on MCLK(ASYNC with WCLK)
-PLL_FBDIV_INTEGER (holding the seven integer bits) = 0x20
-PLL_FBDIV_FRAC_TOP (holding the top bits (MSB) of the fractional part of the divisor) = 0x00
-PLL_FBDIV_FRAC_BOT (holding the bottom bits (LSB) of the fractional part of the divisor) = 0x00 
+#define DA7212_CS_HIGH                  true
+#define DA7212_CS_LOW                   false
+
+#define DA7212_ON                       true
+#define DA7212_OFF                      false
+
+#define DA7212_MUTE                     true
+#define DA7212_UNMUTE                   false
+
+#define DA7212_MASTER                   true
+#define DA7212_SLAVE                    false
+
+#define DA7212_LINE                     0
+#define DA7212_MIC                      1
+#define DA7212_NO_IN                    -1
+
+#define DA7212_DE_EMPH_DISABLED     0
+#define DA7212_DE_EMPH_32KHZ        1
+#define DA7212_DE_EMPH_44KHZ        2
+#define DA7212_DE_EMPH_48KHZ        3
+
+/** A class to control the I2C part of the DA7212
+ *
+ */
+class DA7212
+{
+public:
+    /** Create an instance of the DA7212 class
+     *
+     * @param i2c_sda The SDA pin of the I2C
+     * @param i2c_scl The SCL pin of the I2C
+     */
+    DA7212(PinName i2c_sda, PinName i2c_scl);
+
+    /** Create an instance of the DA7212 class
+     *
+     * @param i2c_sda The SDA pin of the I2C
+     * @param i2c_scl The SCL pin of the I2C
+     * @param cs_level The level of the CS pin on the DA7212
+     */
+    DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level);
+
+    /** Control the power of the device
+     *
+     * @param on_off The power state
+     */
+    void power(bool on_off);
+
+    /** Control the input source of the device
+     *
+     * @param input Select the source of the input of the device: DA7212_LINE, DA7212_MIC, DA7212_NO_IN
+     */
+    void input_select(int input);
+
+    /** Set the headphone volume
+     *
+     * @param h_volume The desired headphone volume: 0->1
+     */
+    void headphone_volume(float h_volume);
+    /*
+     * 1x(-57~+6):64
+     * 0b111001 = 57 = 0 dB
+    void headphone_volume(uint8_t h_volume);
+    */
+
+    /** Set the line in pre-amp volume
+     *
+     * @param li_volume The desired line in volume: 0->1
+     */
+    void linein_volume(float li_volume);
+    /*
+     * 150 x (-27~+36):64
+     * 0b110101 = 53 = 0 dB (default)
+    void linein_volume(uint8_t li_volume);
+    */
+
+    /** Turn on/off the microphone pre-amp boost
+     *
+     * @param mic_boost Boost on or off
+     */
+    void microphone_boost(bool mic_boost);
+/*
+600 x (-1~+6):8
+0b001 = 1 = 0 dB (default)
 */
 
-class DA7212
-{        
-    public:
-        //constructor
-        /** Create a DA7212 object defined on the I2C port
-        *  
-        * @param sda Serial data pin (p9 or p28)
-        * @param scl Serial clock pin (p10 or p27)
-        * @param addr Object address
-        */
-        DA7212(PinName sda, PinName scl, int addr, PinName tx_sda, PinName tx_ws, PinName clk, PinName rx_sda, PinName rx_ws);
+    /** Mute the input
+     *
+     * @param mute Mute on/off
+     */
+    void input_mute(bool mute);
 
-        /** Power up/down
+    /** Mute the output
+     *
+     * @param mute Mute on/off
+     */
+    void output_mute(bool mute);
 
-        *
-        * @param powerUp 0 = power down, 1 = power up
-        */
-        void power(bool powerUp);
+    /** Turn on/off the input stage
+     *
+     * @param on_off Input stage on(true)/off(false)
+     */
+    void input_power(bool on_off);
 
-        /** Overloaded power() function default = 0x07, record requires 0x02
-        *
-        * @param device Call individual devices to power up/down
-        * Line input        0x00 = Off 0x36 = On
-        * Headphone out     0x00 = Off 0x30 = On
-        */
-        void power(int device);
+    /** Turn on/off the output stage
+     *
+     * @param on_off Output stage on(true)/off(false)
+     */
+    void output_power(bool on_off);
 
-        /** Set I2S interface bit length and mode
-        *
-        * @param length Set bit length to 16, 20, 24 or 32 bits
-        * @param mode Set STEREO (0), MONO (1)
-        */
-        void format(char length, bool mode);
+    /** Select the word size
+     *
+     * @param words 16/20/24/32 bits
+     */
+    void wordsize(int words);
 
-        /** Set sample frequency
-         *
-         * @param frequency Sample frequency of data in Hz
-         * @return Returns an integer 0 = success, -1 = unrecognnised frequency
-         * 
-         * The DA7212 supports the following frequencies: 8kHz, 8.021kHz, 32kHz, 44.1kHz, 48kHz, 88.2kHz, 96kHz
-         * Default is 44.1kHz
-         */
-        int frequency(int hz);
+    /** Select interface mode: Master or Slave
+     *
+     * @param master Interface mode: master(true)/slave
+     */
+    void master(bool master);
 
-        /** Reset DA7212
-        *
-        */
-        void reset(void);
+    /** Select the sample rate
+     *
+     * @param freq Frequency: 96/48/32/8 kHz
+     */
+    void frequency(int freq);
 
-        /** Start streaming i.e. enable interrupts
-         *
-         * @param mode Enable interrupts for NONE, TRANSMIT only, RECEIVE only, BOTH
-         */
-        void start(int mode);
+    /** Enable the input highpass filter
+     *
+     * @param enabled Input highpass filter enabled
+     */
+    void input_highpass(bool enabled);
 
-        /** Stop streaming i.e. disable all interrupts
-         *
-         */
-        void stop(void);
-        
-        /** Write [length] 32 bit words in buffer to I2S port
-         *
-         * @param *buffer Address of buffer to be written
-         * @param from Start position in buffer to read from
-         * @param length Number of words to be written (MUST not exceed 4)
-         */
-        void write(int *buffer, int from, int length);
+    /** Enable the output soft mute
+     *
+     * @param enabled Output soft mute enabled
+     */
+    void output_softmute(bool enabled);
 
-        /** Read 4 x (32bit) words into rxBuffer
-         *
-         */
-        void read(void);
+    /** Turn on and off the I2S
+     *
+     * @param on_off Switch the I2S interface on(true)/off(false)
+     */
+    void interface_switch(bool on_off);
 
-        /** Attach a void/void function or void/void static member function to an interrupt generated by the I2SxxFIFOs
-         *
-         * @param function Function to attach
-         *
-         * e.g. <code> myDA7212Object.attach(&myfunction);</code>
-         * OR  <code> myDA7212Object.attach(&myClass::myStaticMemberFunction);</code>
-         */
-        void attach(void(*fptr)(void));
+    /** Reset the device and settings
+     *
+     */
+    void reset();
 
-        /** Attach a nonstatic void/void member function to an interrupt generated by the I2SxxFIFOs
-         *
-         * @param tptr Object pointer
-         * @param mptr Member function pointer
-         *
-         * e.g. <code>myDA7212Object.attach(&myObject, &myClass::myNonstaticMemberFunction);</code> where myObject is an object of myClass
-         */
-        template<typename T>
-        void attach(T *tptr, void(T::*mptr)(void)){
-            mI2s_.attach(tptr, mptr);
-        }
+    /** Set the microphone sidetone volume
+     *
+     * @param sidetone_volume The volume of the sidetone: 0->1
+     * ;does not exist in 7212?
+     */
+    void sidetone(float sidetone_vol);
 
-        /** Line in volume control i.e. record volume
-        *
-        * @param leftVolumeIn Left line-in volume 
-        * @param rightVolumeIn Right line-in volume
-        * @return Returns 0 for success, -1 if parameters are out of range
-        * Parameters accept a value, where 0.0 < parameter < 1.0 and where 0.0 maps to -34.5dB 
-        * and 1.0 maps to +12dB (0.74 = 0 dB default).
-        */
-        int inputVolume(float leftVolumeIn, float rightVolumeIn);
+    /** Set the analog bypass
+     *
+     * @param bypass_en Enable the bypass: enabled(true)
+     */
+    void bypass(bool bypass_en);
 
-        /** Headphone out volume control
-        *
-        * @param leftVolumeOut Left line-out volume
-        * @param rightVolumeOut Right line-out volume
-        * @return Returns 0 for success, -1 if parameters are out of range
-        * Parameters accept a value, where 0.0 < parameter < 1.0 and where 0.0 maps to -73dB (mute) 
-        * and 1.0 maps to +6dB (0.5 = default)
-        */
-        int outputVolume(float leftVolumeOut, float rightVolumeOut);
+    /** Set the deemphasis frequency
+     *
+     * @param code The deemphasis code: DA7212_DE_EMPH_DISABLED, DA7212_DE_EMPH_32KHZ, DA7212_DE_EMPH_44KHZ, DA7212_DE_EMPH_48KHZ
+     */
+    void deemphasis(char code);
 
-        /** Analog audio path control
-        *
-        * @param bypassVar Route analogue audio direct from line in to headphone out
-        */
-        void bypass(bool bypassVar);
+    /** Enable the input highpass filter
+     *
+     * @param enable Enable the input highpass filter enabled(true)
+     */
 
-        /**Digital audio path control
-        *
-        * @param softMute Mute output
-        */
-        void mute(bool softMute);
+    void adc_highpass(bool enable);
 
-        //Receive buffer
-        int *rxBuffer;
-        
-    protected:
-        char cmd[2];    //the address and command for DA7212 internal registers
-        int mAddr;      //register write address
-    private:
-        I2C mI2c_;      //MUST use the I2C port
-        I2SSlave mI2s_;
-        Ticker I2sTick;
-        void io(void);   
-       /** Sample rate control
-        *
-        * @param rate Set the sampling rate as per datasheet section 3.3.2
-        * @param clockIn Set the clock in divider MCLK, MCLK_DIV2
-        * @param clockMode Set clock mode CLOCK_NORMAL, CLOCK_USB
-        */
-        void setSampleRate_(char rate, bool clockIn, bool mode, bool bOSR); 
-       /** Digital interface activation
-        *
-        */
-        void activateDigitalInterface_(void);
-        /** Digital interface deactivation
-        *
-        */
-        void deactivateDigitalInterface_(void);
+    /** Start the device sending/recieving etc
+    */
+    void start();
 
-        //DA7212 register addresses as defined in the DA7212 datasheet
-        #define LEFT_LINE_INPUT_CHANNEL_VOLUME_CONTROL  (0x30)
-        #define RIGHT_LINE_INPUT_CHANNEL_VOLUME_CONTROL (0x31)
-        #define LEFT_CHANNEL_HEADPHONE_VOLUME_CONTROL   (0x02 << 1)
-        #define RIGHT_CHANNEL_HEADPHONE_VOLUME_CONTROL  (0x03 << 1)
-        #define ANALOG_AUDIO_PATH_CONTROL               (0x04 << 1)
-        #define DIGITAL_AUDIO_PATH_CONTROL              (0x05 << 1)
-        #define POWER_DOWN_CONTROL                      (0x50)
-        #define DIGITAL_AUDIO_INTERFACE_FORMAT          (0x29)
-        #define SAMPLE_RATE_CONTROL                     (0x08 << 1)
-        #define DIGITAL_INTERFACE_ACTIVATION            (0x09 << 1)
-        #define RESET_REGISTER                          (0x0F << 1)
-        
-        #define CLOCK_NORMAL        0
-        #define CLOCK_USB           1
-        #define MCLK                0
-        #define MCLK_DIV2           1
+    /** Stop the device sending/recieving etc
+    */
+    void stop();
+
+private:
+
+    enum reg_address {
+        line_in_vol_left         = 0x00,
+        line_in_vol_right         = 0x01,
+        headphone_vol_left        = 0x02,
+        headphone_vol_right        = 0x03,
+        path_analog                = 0x04,
+        path_digital            = 0x05,
+        power_control            = 0x06,
+        interface_format        = 0x07,
+        sample_rate                = 0x08,
+        interface_activation    = 0x09,
+        reset_reg                = 0x0A,
+        all                        = 0xFF
+    };
+
+    enum DA7212_defaults {
+        df_bypass_         = 0,
+        df_ADC_source     = DA7212_LINE,
+        df_mic_mute     = DA7212_UNMUTE,
+        df_li_mute_left = 0,
+        df_li_mute_right = 0,
+        df_mic_boost_     = 0,
+        df_out_mute     = DA7212_UNMUTE,
+
+        df_de_emph_code         = 0x00,
+        df_ADC_highpass_enable     = 0,
+
+        df_device_all_pwr     = 1,
+        df_device_clk_pwr     = 1,
+        df_device_osc_pwr     = 1,
+        df_device_out_pwr     = 1,
+        df_device_dac_pwr     = 1,
+        df_device_adc_pwr     = 1,
+        df_device_mic_pwr     = 0,
+        df_device_lni_pwr     = 1,
+
+        df_device_master         = 0,
+        df_device_lrswap         = 0,
+        df_device_lrws            = 0,
+        df_device_bitlength        = 32,
+
+        df_ADC_rate            = 32000,
+        df_DAC_rate            = 32000,
+
+        df_device_interface_active = 0
+    };
+
+
+    I2C i2c;
+    uint8_t address;
+    void command(reg_address add, uint16_t byte);
+    void form_cmd(reg_address add);
+    void defaulter();
+
+    char gen_samplerate();
+
+    //I2S i2s_tx(I2S_TRANSMIT, p5, p6 , p7);
+    //I2S i2s_rx(I2S_RECIEVE , p8, p29, p30);
+
+    float hp_vol_left, hp_vol_right;
+    float li_vol_left, li_vol_right;
+    float sdt_vol;
+    bool li_mute_left, li_mute_right;
+    bool bypass_;
+    bool ADC_source;
+    bool ADC_source_old;
+    bool mic_mute;
+    bool mic_boost_;
+    bool out_mute;
+    char de_emph_code;
+    bool ADC_highpass_enable;
+
+    bool device_all_pwr;
+    bool device_clk_pwr;
+    bool device_osc_pwr;
+    bool device_out_pwr;
+    bool device_dac_pwr;
+    bool device_adc_pwr;
+    bool device_mic_pwr;
+    bool device_lni_pwr;
+
+    bool device_master;
+    bool device_lrswap;
+    bool device_lrws;
+    char device_bitlength;
+    static const char device_data_form = 0x02;
+
+    int ADC_rate;
+    int DAC_rate;
+    static const bool device_usb_mode = false;
+    static const bool device_clk_in_div = false;
+    static const bool device_clk_out_div = false;
+    bool device_interface_active;
+
 };
+
 
 #endif
