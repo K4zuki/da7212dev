@@ -73,7 +73,7 @@ public:
      * @param i2c_scl The SCL pin of the I2C
      * @param cs_level The level of the CS pin on the DA7212
      */
-    DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level);
+    // DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level);
 
     /** Control the power of the device
      *
@@ -100,13 +100,13 @@ public:
 
     /** Set the line in pre-amp volume
      *
-     * @param li_volume The desired line in volume: 0->1
+     * @param LineIn_volume The desired line in volume: 0->1
      */
-    void linein_volume(float li_volume);
+    void linein_volume(float LineIn_volume);
     /*
      * 150 x (-27~+36):64
      * 0b110101 = 53 = 0 dB (default)
-    void linein_volume(uint8_t li_volume);
+    void linein_volume(uint8_t LineIn_volume);
     */
 
     /** Turn on/off the microphone pre-amp boost
@@ -221,50 +221,50 @@ public:
 private:
 
     enum reg_address {
-        line_in_vol_left         = 0x00,
-        line_in_vol_right         = 0x01,
-        headphone_vol_left        = 0x02,
-        headphone_vol_right        = 0x03,
-        path_analog                = 0x04,
+        line_in_vol_left        = 0x00,
+        line_in_vol_right       = 0x01,
+        headphone_vol_left      = 0x02,
+        headphone_vol_right     = 0x03,
+        path_analog             = 0x04,
         path_digital            = 0x05,
-        power_control            = 0x06,
+        power_control           = 0x06,
         interface_format        = 0x07,
-        sample_rate                = 0x08,
+        sample_rate             = 0x08,
         interface_activation    = 0x09,
-        reset_reg                = 0x0A,
-        all                        = 0xFF
+        reset_reg               = 0x0A,
+        all                     = 0xFF
     };
 
     enum DA7212_defaults {
-        df_bypass_         = 0,
-        df_ADC_source     = DA7212_LINE,
-        df_mic_mute     = DA7212_UNMUTE,
-        df_li_mute_left = 0,
-        df_li_mute_right = 0,
-        df_mic_boost_     = 0,
-        df_out_mute     = DA7212_UNMUTE,
+        Default_bypass_             = 0,
+        Default_ADC_source          = DA7212_LINE,
+        Default_mic_mute            = DA7212_UNMUTE,
+        Default_LineIn_mute_left    = 0,
+        Default_LineIn_mute_right   = 0,
+        Default_mic_boost_          = 0,
+        Default_out_mute            = DA7212_UNMUTE,
 
-        df_de_emph_code         = 0x00,
-        df_ADC_highpass_enable     = 0,
+        Default_de_emph_code         = 0x00,
+        Default_ADC_highpass_enable  = 0,
 
-        df_device_all_pwr     = 1,
-        df_device_clk_pwr     = 1,
-        df_device_osc_pwr     = 1,
-        df_device_out_pwr     = 1,
-        df_device_dac_pwr     = 1,
-        df_device_adc_pwr     = 1,
-        df_device_mic_pwr     = 0,
-        df_device_lni_pwr     = 1,
+        Default_device_all_pwr     = 1,
+        Default_device_clk_pwr     = 1,
+        Default_device_osc_pwr     = 1,
+        Default_device_out_pwr     = 1,
+        Default_device_dac_pwr     = 1,
+        Default_device_adc_pwr     = 1,
+        Default_device_mic_pwr     = 0,
+        Default_device_lni_pwr     = 1,
 
-        df_device_master         = 0,
-        df_device_lrswap         = 0,
-        df_device_lrws            = 0,
-        df_device_bitlength        = 32,
+        Default_device_master         = 0,
+        Default_device_lrswap         = 0,
+        Default_device_lrws           = 0,
+        Default_device_bitlength      = 32,
 
-        df_ADC_rate            = 32000,
-        df_DAC_rate            = 32000,
+        Default_ADC_rate            = 32000,
+        Default_DAC_rate            = 32000,
 
-        df_device_interface_active = 0
+        Default_device_interface_active = 0
     };
 
 
@@ -280,9 +280,9 @@ private:
     //I2S i2s_rx(I2S_RECIEVE , p8, p29, p30);
 
     float hp_vol_left, hp_vol_right;
-    float li_vol_left, li_vol_right;
+    float LineIn_vol_left, LineIn_vol_right;
     float sdt_vol;
-    bool li_mute_left, li_mute_right;
+    bool LineIn_mute_left, LineIn_mute_right;
     bool bypass_;
     bool ADC_source;
     bool ADC_source_old;

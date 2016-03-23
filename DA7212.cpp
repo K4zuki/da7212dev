@@ -33,11 +33,11 @@
 #define DA7212_HP_VOL_DF_MASK 0x80
 
 
-#define DA7212_DF_hp_vol_left     0.5
-#define DA7212_DF_hp_vol_right     0.5
-#define DA7212_DF_li_vol_left     0.5
-#define DA7212_DF_li_vol_right    0.5
-#define DA7212_DF_sdt_vol         0
+#define DA7212_Default_HP_Volume_Left         (57)
+#define DA7212_Default_HP_Volume_Right        (57)
+#define DA7212_Default_LineIn_Volume_Left     (53)
+#define DA7212_Default_LineIn_Volume_Right    (53)
+#define DA7212_DF_sdt_vol                     0
 
 const uint8_t base_address = 0x1A; //0x34 in 8bit address
 
@@ -48,11 +48,11 @@ DA7212::DA7212(PinName i2c_sda, PinName i2c_scl): i2c(i2c_sda,i2c_scl)  {
     form_cmd(all);
 }
 
-DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level): i2c(i2c_sda,i2c_scl)  {
-    address = base_address + (1*cs_level);
-    defaulter();
-    form_cmd(all);
-}
+// DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level): i2c(i2c_sda,i2c_scl)  {
+//     address = base_address + (1*cs_level);
+//     defaulter();
+//     form_cmd(all);
+// }
 
 void DA7212::power(bool on_off) {
     device_all_pwr = on_off;
@@ -63,33 +63,33 @@ void DA7212::input_select(int input) {
 
     switch(input)
     {
-        case DA7212_NO_IN:
-            device_adc_pwr = false;
-            device_mic_pwr = false;
-            device_lni_pwr = false;
-            form_cmd(power_control);
-            break;
+        // case DA7212_NO_IN:
+        //     device_adc_pwr = false;
+        //     device_mic_pwr = false;
+        //     device_lni_pwr = false;
+        //     form_cmd(power_control);
+        //     break;
         case DA7212_LINE:
-            device_adc_pwr = true;
-            device_lni_pwr = true;
-            device_mic_pwr = false;
-            ADC_source = DA7212_LINE;
+            device_adc_pwr  = true;
+            device_lni_pwr  = true;
+            device_mic_pwr  = false;
+            ADC_source      = DA7212_LINE;
             form_cmd(power_control);
             form_cmd(path_analog);
             break;
-        case DA7212_MIC:
-            device_adc_pwr = true;
-            device_lni_pwr = false;
-            device_mic_pwr = true;
-            ADC_source = DA7212_MIC;
-            form_cmd(power_control);
-            form_cmd(path_analog);
-            break;
+        // case DA7212_MIC:
+        //     device_adc_pwr = true;
+        //     device_lni_pwr = false;
+        //     device_mic_pwr = true;
+        //     ADC_source = DA7212_MIC;
+        //     form_cmd(power_control);
+        //     form_cmd(path_analog);
+        //     break;
         default:
-            device_adc_pwr     = df_device_adc_pwr;
-            device_mic_pwr     = df_device_mic_pwr;
-            device_lni_pwr     = df_device_lni_pwr;
-            ADC_source         = df_ADC_source;
+            device_adc_pwr     = Default_device_adc_pwr;
+            device_mic_pwr     = Default_device_mic_pwr;
+            device_lni_pwr     = Default_device_lni_pwr;
+            ADC_source         = Default_ADC_source;
             form_cmd(power_control);
             form_cmd(path_analog);
             break;
@@ -98,22 +98,37 @@ void DA7212::input_select(int input) {
 }
 
 void DA7212::headphone_volume(float h_volume) {
-    hp_vol_left = h_volume;
-    hp_vol_right = h_volume;
+    hp_vol_left   = h_volume;
+    hp_vol_right  = h_volume;
     form_cmd(headphone_vol_left);
     form_cmd(headphone_vol_right);
 }
+// void DA7212::headphone_volume(uint8_t h_volume) {
+//     hp_vol_left  = h_volume & 0x3F;
+//     hp_vol_right = h_volume & 0x3F;
+//     form_cmd(headphone_vol_left);
+//     form_cmd(headphone_vol_right);
+// }
 
-void DA7212::linein_volume(float li_volume) {
-    li_vol_left = li_volume;
-    li_vol_right = li_volume;
+void DA7212::linein_volume(float LineIn_volume) {
+    LineIn_vol_left   = LineIn_volume;
+    LineIn_vol_right  = LineIn_volume;
     form_cmd(line_in_vol_left);
     form_cmd(line_in_vol_right);
 }
+// void DA7212::linein_volume(uint8_t LineIn_volume){
+//     LineIn_vol_left  = LineIn_volume & 0x3F;
+//     LineIn_vol_right = LineIn_volume & 0x3F;
+//     form_cmd(line_in_vol_left);
+//     form_cmd(line_in_vol_right);
+// }
 
 void DA7212::microphone_boost(bool mic_boost) {
     mic_boost_ = mic_boost;
 }
+// void DA7212::microphone_boost(uint8_t mic_boost) {
+//     mic_boost_ = mic_boost & 0x07;
+// }
 
 void DA7212::input_mute(bool mute) {
     if(ADC_source == DA7212_MIC)
@@ -121,10 +136,10 @@ void DA7212::input_mute(bool mute) {
         mic_mute = mute;
         form_cmd(path_analog);
     }
-    else
+    else // DA7212_LINE
     {
-        li_mute_left = mute;
-        li_mute_right = mute;
+        LineIn_mute_left    = mute;
+        LineIn_mute_right   = mute;
         form_cmd(line_in_vol_left);
         form_cmd(line_in_vol_right);
     }
@@ -232,8 +247,8 @@ void DA7212::form_cmd(reg_address add) {
     switch(add)
     {
         case line_in_vol_left:
-            temp = int(li_vol_left * 32) - 1;
-            mute = li_mute_left;
+            temp = int(LineIn_vol_left * 32) - 1;
+            mute = LineIn_mute_left;
 
             if(temp < 0)
             {
@@ -244,8 +259,8 @@ void DA7212::form_cmd(reg_address add) {
             cmd |= mute << 7;
             break;
         case line_in_vol_right:
-            temp = int(li_vol_right * 32) - 1;
-            mute = li_mute_right;
+            temp = int(LineIn_vol_right * 32) - 1;
+            mute = LineIn_mute_right;
             if(temp < 0)
             {
                 temp = 0;
@@ -357,51 +372,52 @@ void DA7212::form_cmd(reg_address add) {
 }
 
 void DA7212::defaulter() {
-    hp_vol_left = DA7212_DF_hp_vol_left;
-    hp_vol_right = DA7212_DF_hp_vol_right;
-    li_vol_left = DA7212_DF_li_vol_left;
-    li_vol_right = DA7212_DF_li_vol_right;
-    sdt_vol = DA7212_DF_sdt_vol;
-    bypass_ = df_bypass_;
+    hp_vol_left       = DA7212_Default_HP_Volume_Left;
+    hp_vol_right      = DA7212_Default_HP_Volume_Right;
+    LineIn_vol_left   = DA7212_Default_LineIn_Volume_Left;
+    LineIn_vol_right  = DA7212_Default_LineIn_Volume_Right;
+    sdt_vol           = DA7212_DF_sdt_vol;
+    bypass_           = Default_bypass_;
 
-    ADC_source = df_ADC_source;
-    ADC_source_old = df_ADC_source;
+    ADC_source      = Default_ADC_source;
+    ADC_source_old  = Default_ADC_source;
 
-    mic_mute = df_mic_mute;
-    li_mute_left = df_li_mute_left;
-    li_mute_right = df_li_mute_right;
-
-
-    mic_boost_ = df_mic_boost_;
-    out_mute = df_out_mute;
-    de_emph_code = df_de_emph_code;
-    ADC_highpass_enable = df_ADC_highpass_enable;
-
-    device_all_pwr = df_device_all_pwr;
-    device_clk_pwr = df_device_clk_pwr;
-    device_osc_pwr = df_device_osc_pwr;
-    device_out_pwr = df_device_out_pwr;
-    device_dac_pwr = df_device_dac_pwr;
-    device_adc_pwr = df_device_dac_pwr;
-    device_mic_pwr = df_device_mic_pwr;
-    device_lni_pwr = df_device_lni_pwr;
-
-    device_master         = df_device_master;
-    device_lrswap         = df_device_lrswap;
-    device_lrws         = df_device_lrws;
-    device_bitlength      = df_device_bitlength;
+    mic_mute          = Default_mic_mute;
+    LineIn_mute_left  = Default_LineIn_mute_left;
+    LineIn_mute_right = Default_LineIn_mute_right;
 
 
-    ADC_rate  = df_ADC_rate;
-    DAC_rate  = df_DAC_rate;
+    mic_boost_            = Default_mic_boost_;
+    out_mute              = Default_out_mute;
+    de_emph_code          = Default_de_emph_code;
+    ADC_highpass_enable   = Default_ADC_highpass_enable;
 
-    device_interface_active  = df_device_interface_active;
+    device_all_pwr  = Default_device_all_pwr;
+    device_clk_pwr  = Default_device_clk_pwr;
+    device_osc_pwr  = Default_device_osc_pwr;
+    device_out_pwr  = Default_device_out_pwr;
+    device_dac_pwr  = Default_device_dac_pwr;
+    device_adc_pwr  = Default_device_dac_pwr;
+    device_mic_pwr  = Default_device_mic_pwr;
+    device_lni_pwr  = Default_device_lni_pwr;
+
+    device_master         = Default_device_master;
+    device_lrswap         = Default_device_lrswap;
+    device_lrws           = Default_device_lrws;
+    device_bitlength      = Default_device_bitlength;
+
+
+    ADC_rate  = Default_ADC_rate;
+    DAC_rate  = Default_DAC_rate;
+
+    device_interface_active  = Default_device_interface_active;
 }
 
 char DA7212::gen_samplerate() {
     char temp = 0;
     switch(ADC_rate)
     {
+/*
         case 96000:
             temp = 0x0E;
             break;
@@ -409,15 +425,18 @@ char DA7212::gen_samplerate() {
             temp = 0x00;
             if(DAC_rate == 8000) temp = 0x02;
             break;
+*/
         case 32000:
             temp = 0x0C;
             break;
+/*
         case 8000:
             temp = 0x03;
             if(DAC_rate == 48000) temp = 0x04;
             break;
+            */
         default:
-            temp = 0x00;
+            temp = 0x0C;
             break;
     }
     return temp;
