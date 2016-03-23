@@ -67,7 +67,7 @@ public:
      */
     DA7212(PinName i2c_sda, PinName i2c_scl);
 
-    /** Create an instance of the DA7212 class
+    /* Create an instance of the DA7212 class
      *
      * @param i2c_sda The SDA pin of the I2C
      * @param i2c_scl The SCL pin of the I2C
