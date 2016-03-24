@@ -97,54 +97,60 @@ void DA7212::input_select(int input) {
     ADC_source_old = ADC_source;
 }
 
-void DA7212::headphone_volume(float h_volume) {
-    hp_vol_left   = h_volume;
-    hp_vol_right  = h_volume;
-    form_cmd(headphone_vol_left);
-    form_cmd(headphone_vol_right);
-}
-// void DA7212::headphone_volume(uint8_t h_volume) {
-//     hp_vol_left  = h_volume & 0x3F;
-//     hp_vol_right = h_volume & 0x3F;
+//     case DA721X_HP:
+//         /*
+//         1x(-57~+6):64
+//         0b111001 = 57 = 0 dB
+//         */
+//         i2c_reg_update_bits(REG_HP_L_GAIN, 0x3F, (vol*100-HP_PGA_MIN)/OUT_PGA_STEP);
+//         i2c_reg_update_bits(REG_HP_R_GAIN, 0x3F, (vol*100-HP_PGA_MIN)/OUT_PGA_STEP);
+//         break;
+
+// void DA7212::headphone_volume(float h_volume) {
+//     hp_vol_left   = h_volume;
+//     hp_vol_right  = h_volume;
 //     form_cmd(headphone_vol_left);
 //     form_cmd(headphone_vol_right);
 // }
-
-void DA7212::linein_volume(float LineIn_volume) {
-    LineIn_vol_left   = LineIn_volume;
-    LineIn_vol_right  = LineIn_volume;
-    form_cmd(line_in_vol_left);
-    form_cmd(line_in_vol_right);
+void DA7212::headphone_volume(uint8_t h_volume) {
+    hp_vol_left  = h_volume & 0x3F;
+    hp_vol_right = h_volume & 0x3F;
+    i2c_register_write(REG_HP_L_GAIN, hp_vol_left  );
+    i2c_register_write(REG_HP_R_GAIN, hp_vol_right );
 }
-// void DA7212::linein_volume(uint8_t LineIn_volume){
-//     LineIn_vol_left  = LineIn_volume & 0x3F;
-//     LineIn_vol_right = LineIn_volume & 0x3F;
+
+// void DA7212::linein_volume(float LineIn_volume) {
+//     LineIn_vol_left   = LineIn_volume;
+//     LineIn_vol_right  = LineIn_volume;
 //     form_cmd(line_in_vol_left);
 //     form_cmd(line_in_vol_right);
 // }
-//     case DA721X_AUX:
-//         /*
-//         150 x (-3~12):16
-//         0b0011 = 3 = 0 dB
-//         */
-//         i2c_reg_update_bits(REG_AUX_L_GAIN, 0x3F, 17+(vol*100-AUX_PGA_MIN)/AUX_PGA_STEP);
-//         i2c_reg_update_bits(REG_AUX_R_GAIN, 0x3F, 17+(vol*100-AUX_PGA_MIN)/AUX_PGA_STEP);
-//         break;
-
-void DA7212::microphone_boost(bool mic_boost) {
-    mic_boost_ = mic_boost;
+// /**
+// 150 x (-27~+36):64
+// 0b110101 = 53 = 0 dB (default)
+// */
+void DA7212::linein_volume(uint8_t LineIn_volume){
+    LineIn_vol_left  = LineIn_volume & 0x3F;
+    LineIn_vol_right = LineIn_volume & 0x3F;
+    i2c_register_write(REG_AUX_L_GAIN, LineIn_vol_left );
+    i2c_register_write(REG_AUX_R_GAIN, LineIn_vol_right);
 }
-// void DA7212::microphone_boost(uint8_t mic_boost) {
-//     mic_boost_ = mic_boost & 0x07;
+
+// void DA7212::microphone_boost(bool mic_boost) {
+//     mic_boost_ = mic_boost;
 // }
-//     case DA721X_MIC1:
+void DA7212::microphone_boost(uint8_t mic_boost) {
+    mic_boost = mic_boost & 0x07;
+    i2c_register_write(REG_MIC_1_GAIN, mic_boost);
+}
+//     case DA721X_MIC1: // headset mic
 //         /*
 //         600 x (-1~+6):8
 //         0b001 = 1 = 0 dB (default)
 //         */
 //         i2c_reg_update_bits(REG_MIC_1_GAIN, 0x07, (vol*100-MIC_PGA_MIN)/MIC_PGA_STEP);
 //         break;
-//     case DA721X_MIC2:
+//     case DA721X_MIC2: // onboard unpop mic
 //         /*
 //         600 x (-1~+6):8
 //         0b001 = 1 = 0 dB (default)
@@ -269,15 +275,15 @@ void DA7212::frequency(int freq) {
     form_cmd(sample_rate);
 }
 
-void DA7212::input_highpass(bool enabled) {
-    ADC_highpass_enable = enabled;
-    form_cmd(path_digital);
-}
+// void DA7212::input_highpass(bool enabled) {
+//     ADC_highpass_enable = enabled;
+//     form_cmd(path_digital);
+// }
 
 void DA7212::output_softmute(bool enabled) {
     out_mute = enabled;
-    form_cmd(path_digital);
-    // i2c_register_write(REG_DAC_FILTERS5, (mute ? 0x80 : 0x00));    //SOFT MUTE ON! for DAC
+    // form_cmd(path_digital);
+    i2c_register_write(REG_DAC_FILTERS5, (enabled ? 0x80 : 0x00));    //SOFT MUTE ON! for DAC
 }
 
 void DA7212::interface_switch(bool on_off) {
@@ -285,15 +291,15 @@ void DA7212::interface_switch(bool on_off) {
     form_cmd(interface_activation);
 }
 
-void DA7212::sidetone(float sidetone_vol) {
-    sdt_vol = sidetone_vol;
-    form_cmd(path_analog);
-}
+// void DA7212::sidetone(float sidetone_vol) {
+//     sdt_vol = sidetone_vol;
+//     form_cmd(path_analog);
+// }
 
-void DA7212::deemphasis(char code) {
-    de_emph_code = code & 0x03;
-    form_cmd(path_digital);
-}
+// void DA7212::deemphasis(char code) {
+//     de_emph_code = code & 0x03;
+//     form_cmd(path_digital);
+// }
 
 void DA7212::reset() {
     form_cmd(reset_reg);
@@ -303,10 +309,10 @@ void DA7212::start() {
     interface_switch(true);
 }
 
-void DA7212::bypass(bool enable) {
-    bypass_ = enable;
-    form_cmd(path_analog);
-}
+// void DA7212::bypass(bool enable) {
+//     bypass_ = enable;
+//     form_cmd(path_analog);
+// }
 
 void DA7212::stop() {
     interface_switch(false);
@@ -324,6 +330,13 @@ void DA7212::i2c_register_write(DA7212Registers register, uint8_t command){
     temp[0] = (char)register;
     temp[1] = (char)command;
     i2c.write((address | 0), (const char*)temp, 2);
+}
+
+uint8_t DA7212::i2c_register_read(DA7212Registers register){
+    char temp = (char)register;
+    i2c.write((address | 0), (const char*)temp, 1, true); //will do repeated start
+    i2c.read((address | 1), &temp, 1);
+    return temp;
 }
 
 // int da7212_set_vol_dB(enum da7212_endpoint endpoint, int vol)
