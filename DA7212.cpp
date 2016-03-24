@@ -420,40 +420,40 @@ void DA7212::form_cmd(reg_address add) {
     bool mute;
     switch(add)
     {
-        case line_in_vol_left:
-            temp = int(LineIn_vol_left * 32) - 1;
-            mute = LineIn_mute_left;
+        // case line_in_vol_left:
+        //     temp = int(LineIn_vol_left * 32) - 1;
+        //     mute = LineIn_mute_left;
+        //
+        //     if(temp < 0)
+        //     {
+        //         temp = 0;
+        //         mute = true;
+        //     }
+        //     cmd = temp & 0x1F;
+        //     cmd |= mute << 7;
+        //     break;
+        // case line_in_vol_right:
+        //     temp = int(LineIn_vol_right * 32) - 1;
+        //     mute = LineIn_mute_right;
+        //     if(temp < 0)
+        //     {
+        //         temp = 0;
+        //         mute = true;
+        //     }
+        //     cmd = temp & 0x1F;
+        //     cmd |= mute << 7;
+        //     break;
 
-            if(temp < 0)
-            {
-                temp = 0;
-                mute = true;
-            }
-            cmd = temp & 0x1F;
-            cmd |= mute << 7;
-            break;
-        case line_in_vol_right:
-            temp = int(LineIn_vol_right * 32) - 1;
-            mute = LineIn_mute_right;
-            if(temp < 0)
-            {
-                temp = 0;
-                mute = true;
-            }
-            cmd = temp & 0x1F;
-            cmd |= mute << 7;
-            break;
-
-        case headphone_vol_left:
-            temp = int(hp_vol_left * 80) + 47;
-            cmd = DA7212_HP_VOL_DF_MASK;
-            cmd |= temp & 0x7F;
-            break;
-        case headphone_vol_right:
-            temp = int(hp_vol_right * 80) + 47;
-            cmd = DA7212_HP_VOL_DF_MASK;
-            cmd |= temp & 0x7F;
-            break;
+        // case headphone_vol_left:
+        //     temp = int(hp_vol_left * 80) + 47;
+        //     cmd = DA7212_HP_VOL_DF_MASK;
+        //     cmd |= temp & 0x7F;
+        //     break;
+        // case headphone_vol_right:
+        //     temp = int(hp_vol_right * 80) + 47;
+        //     cmd = DA7212_HP_VOL_DF_MASK;
+        //     cmd |= temp & 0x7F;
+        //     break;
 
         case path_analog:
             temp = int(sdt_vol * 5);
