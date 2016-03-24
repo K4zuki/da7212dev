@@ -277,6 +277,7 @@ void DA7212::input_highpass(bool enabled) {
 void DA7212::output_softmute(bool enabled) {
     out_mute = enabled;
     form_cmd(path_digital);
+    // i2c_register_write(REG_DAC_FILTERS5, (mute ? 0x80 : 0x00));    //SOFT MUTE ON! for DAC
 }
 
 void DA7212::interface_switch(bool on_off) {
@@ -317,6 +318,14 @@ void DA7212::command(reg_address add, uint16_t cmd) {
     temp[1] = (cmd & 0xFF);
     i2c.write((address<<1), temp, 2);
 }
+
+void DA7212::i2c_register_write(DA7212Registers register, uint8_t command){
+    char temp[2];
+    temp[0] = (char)register;
+    temp[1] = (char)command;
+    i2c.write((address | 0), (const char*)temp, 2);
+}
+
 // int da7212_set_vol_dB(enum da7212_endpoint endpoint, int vol)
 // {
 //     printf("Endpoint(%d):%ddB\n",endpoint, vol);
@@ -474,6 +483,7 @@ void DA7212::form_cmd(reg_address add) {
             break;
 
         case interface_format:
+// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
             cmd |= device_master << 6;
             cmd |= device_lrswap << 5;
             cmd |= device_lrws     << 4;
@@ -739,10 +749,12 @@ char DA7212::gen_samplerate() {
 // int da7212_set_dai_pll(uint8_t sampling_rate) {
 //     uint8_t pll_ctrl, indiv_bits, indiv;
 //     uint8_t pll_frac_top, pll_frac_bot, pll_integer;
+//     uint8_t use_pll = 0x80; //ENABLE PLL
 //     /* Reset PLL configuration */
 //     i2c_register_write(REG_DAC_FILTERS5, 0x80);    //SOFT MUTE ON!
 //
-//     i2c_register_write(REG_PLL_CTRL, 0);
+//     i2c_register_write(REG_PLL_CTRL, 0); //  system clock is MCLK; SRM disabled; 32 kHz mode disabled; squarer at the MCLK disabled; input clock range for the PLL= 2 - 10 MHz
+
 //
 //     if (i2c_register_write(REG_SR, sampling_rate) < 0) {
 //         printf("codec_set_sample_rate: error in write reg .\n");
@@ -765,6 +777,8 @@ char DA7212::gen_samplerate() {
 //     } else if (DA721X_MCLK <= 54000000) {
 //         indiv_bits = DA721X_PLL_INDIV_40_54_MHZ;
 //         indiv = DA721X_PLL_INDIV_40_54_MHZ_VAL;
+//     } else if(DA721X_MCLK == 12288000){
+//         use_pll = 0;
 //     } else {
 //         goto pll_err;
 //     }
@@ -815,7 +829,7 @@ char DA7212::gen_samplerate() {
 //     pll_ctrl |= DA721X_PLL_MCLK_SQR_EN;
 // #endif
 //     /* Enable PLL */
-//     pll_ctrl |= DA721X_PLL_EN;
+//     pll_ctrl |= use_pll;
 //     i2c_register_write(REG_PLL_CTRL, pll_ctrl);
 //     wait_us(10*1000); //10ms delay
 //     i2c_register_write(REG_DAC_FILTERS5, 0x00);    //SOFT MUTE OFF!
