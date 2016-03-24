@@ -93,39 +93,41 @@ class DA7212
      *
      * @param h_volume The desired headphone volume: 0->1
      */
-    void headphone_volume(float h_volume);
+    // void headphone_volume(float h_volume);
+    void headphone_volume(uint8_t h_volume);
     /*
      * 1x(-57~+6):64
      * 0b111001 = 57 = 0 dB
-     * void headphone_volume(uint8_t h_volume);
      */
 
     /** Set the line in pre-amp volume
      *
      * @param LineIn_volume The desired line in volume: 0->1
      */
-    void linein_volume(float LineIn_volume);
+    // void linein_volume(float LineIn_volume);
+    void linein_volume(uint8_t LineIn_volume);
     /*
      * 150 x (-27~+36):64
      * 0b110101 = 53 = 0 dB (default)
-    void linein_volume(uint8_t LineIn_volume);
     */
 
     /** Turn on/off the microphone pre-amp boost
      *
      * @param mic_boost Boost on or off
      */
-    void microphone_boost(bool mic_boost);
-/*
-600 x (-1~+6):8
-0b001 = 1 = 0 dB (default)
-*/
+    // void microphone_boost(bool mic_boost);
+    void microphone_boost(uint8-t mic_boost);
+    /*
+    600 x (-1~+6):8
+    0b001 = 1 = 0 dB (default)
+    */
 
     /** Mute the input
      *
      * @param mute Mute on/off
      */
     void input_mute(bool mute);
+#define DA721X_MUTE_EN (0x40)
 
     /** Mute the output
      *
@@ -472,6 +474,7 @@ private:
     uint8_t address;
     void command(reg_address add, uint16_t byte);
     void i2c_register_write(DA7212Registers register, uint8_t command);
+    uint8_t i2c_register_read(DA7212Registers register);
     void form_cmd(reg_address add);
     void defaulter();
 
@@ -489,7 +492,7 @@ private:
     bool ADC_source;
     bool ADC_source_old;
     bool mic_mute;
-    bool mic_boost_;
+    // bool mic_boost_;
     bool out_mute;
     char de_emph_code;
     bool ADC_highpass_enable;
