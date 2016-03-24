@@ -116,7 +116,7 @@ class DA7212
      * @param mic_boost Boost on or off
      */
     // void microphone_boost(bool mic_boost);
-    void microphone_boost(uint8-t mic_boost);
+    void microphone_boost(uint8_t mic_boost);
     /*
     600 x (-1~+6):8
     0b001 = 1 = 0 dB (default)
@@ -391,7 +391,7 @@ private:
     1x(-57~+6):64
     0b111001 = 57 = 0 dB
     */
-    enum DA7212HeadPhoneGain{{
+    enum DA7212HeadPhoneGain{
         HP_PGA_MIN    =(-5700), // -57 ~ 6dB
         HP_PGA_MAX    =(600)
     };
