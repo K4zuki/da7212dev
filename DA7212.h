@@ -473,8 +473,8 @@ private:
     I2C i2c;
     uint8_t address;
     void command(reg_address add, uint16_t byte);
-    void i2c_register_write(DA7212Registers register, uint8_t command);
-    uint8_t i2c_register_read(DA7212Registers register);
+    void i2c_register_write(DA7212Registers reg, uint8_t command);
+    uint8_t i2c_register_read(DA7212Registers reg);
     void form_cmd(reg_address add);
     void defaulter();
 

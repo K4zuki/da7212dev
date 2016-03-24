@@ -325,15 +325,15 @@ void DA7212::command(reg_address add, uint16_t cmd) {
     i2c.write((address<<1), temp, 2);
 }
 
-void DA7212::i2c_register_write(DA7212Registers register, uint8_t command){
+void DA7212::i2c_register_write(DA7212Registers reg, uint8_t command){
     char temp[2];
-    temp[0] = (char)register;
+    temp[0] = (char)reg;
     temp[1] = (char)command;
     i2c.write((address | 0), (const char*)temp, 2);
 }
 
-uint8_t DA7212::i2c_register_read(DA7212Registers register){
-    char temp = (char)register;
+uint8_t DA7212::i2c_register_read(DA7212Registers reg){
+    char temp = (char)reg;
     i2c.write((address | 0), (const char*)temp, 1, true); //will do repeated start
     i2c.read((address | 1), &temp, 1);
     return temp;
