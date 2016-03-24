@@ -54,12 +54,211 @@
 #define DA7212_DE_EMPH_44KHZ        2
 #define DA7212_DE_EMPH_48KHZ        3
 
+#define DA721X_MCLK 12288000
+
 /** A class to control the I2C part of the DA7212
  *
  */
 class DA7212
 {
 public:
+enum DA7212Registers{
+    REG_STATUS1               = (0x02),
+    REG_PLL_STATUS            ,
+    REG_AUX_L_GAIN_STATUS     ,
+    REG_AUX_R_GAIN_STATUS     ,
+    REG_MIC_1_GAIN_STATUS     ,
+    REG_MIC_2_GAIN_STATUS     ,
+    REG_MIXIN_L_GAIN_STATUS   ,
+    REG_MIXIN_R_GAIN_STATUS   ,
+    REG_ADC_L_GAIN_STATUS     ,
+    REG_ADC_R_GAIN_STATUS     ,
+    REG_DAC_L_GAIN_STATUS     ,
+    REG_DAC_R_GAIN_STATUS     ,
+    REG_HP_L_GAIN_STATUS      ,
+    REG_HP_R_GAIN_STATUS      ,
+    REG_LINE_GAIN_STATUS      ,
+    REG_CIF_CTRL              = (0x1D),
+    REG_DIG_ROUTING_DAI       = (0x21),
+    REG_SR                    ,
+    REG_REFERENCES            ,
+    REG_PLL_FRAC_TOP          ,
+    REG_PLL_FRAC_BOT          ,
+    REG_PLL_INTEGER           ,
+    REG_PLL_CTRL PLL_         ,
+    REG_DAI_CLK_MODE          ,
+    REG_DAI_CTRL DAI_         ,
+    REG_DIG_ROUTING_DAC       ,
+    REG_ALC_CTRL1             ,
+    REG_AUX_L_GAIN            = (0x30),
+    REG_AUX_R_GAIN            ,
+    REG_MIXIN_L_SELECT        ,
+    REG_MIXIN_R_SELECT        ,
+    REG_MIXIN_L_GAIN          ,
+    REG_MIXIN_R_GAIN          ,
+    REG_ADC_L_GAIN            ,
+    REG_ADC_R_GAIN            ,
+    REG_ADC_FILTERS1          ,
+    REG_MIC_1_GAIN            ,
+    REG_MIC_2_GAIN            ,
+    REG_DAC_FILTERS5          = (0x40),
+    REG_DAC_FILTERS2          ,
+    REG_DAC_FILTERS3          ,
+    REG_DAC_FILTERS4          ,
+    REG_DAC_FILTERS1          ,
+    REG_DAC_L_GAIN            ,
+    REG_DAC_R_GAIN            ,
+    REG_CP_CTRL               ,
+    REG_HP_L_GAIN             ,
+    REG_HP_R_GAIN             ,
+    REG_LINE_GAIN             ,
+    REG_MIXOUT_L_SELECT       ,
+    REG_MIXOUT_R_SELECT       ,
+    REG_SYSTEM_MODES_INPUT    = (0x50),
+    REG_SYSTEM_MODES_OUTPUT   ,
+    REG_AUX_L_CTRL            = (0x60),
+    REG_AUX_R_CTRL            ,
+    REG_MICBIAS_CTRL          ,
+    REG_MIC_1_CTRL            ,
+    REG_MIC_2_CTRL            ,
+    REG_MIXIN_L_CTRL          ,
+    REG_MIXIN_R_CTRL          ,
+    REG_ADC_L_CTRL            ,
+    REG_ADC_R_CTRL            ,
+    REG_DAC_L_CTRL            ,
+    REG_DAC_R_CTRL            ,
+    REG_HP_L_CTRL             ,
+    REG_HP_R_CTRL             ,
+    REG_LINE_CTRL             ,
+    REG_MIXOUT_L_CTRL         ,
+    REG_MIXOUT_R_CTRL         ,
+    REG_MIXED_SAMPLE_MODE     = (0x84),
+    REG_LDO_CTRL              = (0x90),
+    REG_GAIN_RAMP_CTRL        = (0x92),
+    REG_MIC_CONFIG            ,
+    REG_PC_COUNT              ,
+    REG_CP_VOL_THRESHOLD1     ,
+    REG_CP_DELAY              ,
+    REG_CP_DETECTOR           ,
+    REG_DAI_OFFSET            ,
+    REG_DIG_CTRL              ,
+    REG_ALC_CTRL2             ,
+    REG_ALC_CTRL3             ,
+    REG_ALC_NOISE             ,
+    REG_ALC_TARGET_MIN        ,
+    REG_ALC_TARGET_MAX        ,
+    REG_ALC_GAIN_LIMITS       ,
+    REG_ALC_ANA_GAIN_LIMITS   ,
+    REG_ALC_ANTICLIP_CTRL     ,
+    REG_ALC_ANTICLIP_LEVEL    ,
+    REG_ALC_OFFSET_AUTO_M_L   ,
+    REG_ALC_OFFSET_AUTO_U_L   ,
+    REG_ALC_OFFSET_MAN_M_L    ,
+    REG_ALC_OFFSET_MAN_U_L    ,
+    REG_ALC_OFFSET_AUTO_M_R   ,
+    REG_ALC_OFFSET_AUTO_U_R   ,
+    REG_ALC_OFFSET_MAN_M_R    ,
+    REG_ALC_OFFSET_MAN_U_R    ,
+    REG_ALC_CIC_OP_LVL_CTRL   ,
+    REG_ALC_CIC_OP_LVL_DATA   ,
+    REG_DAC_NG_SETUP_TIME     ,
+    REG_DAC_NG_OFF_THRESHOLD  ,
+    REG_DAC_NG_ON_THRESHOLD   ,
+    REG_DAC_NG_CTRL           ,
+    REG_TONE_GEN_CFG1         = (0xB4),
+    REG_TONE_GEN_CFG2         ,
+    REG_TONE_GEN_CYCLES       ,
+    REG_TONE_GEN_FREQ1_L      ,
+    REG_TONE_GEN_FREQ1_U      ,
+    REG_TONE_GEN_FREQ2_L      ,
+    REG_TONE_GEN_FREQ2_U      ,
+    REG_TONE_GEN_ON_PER       ,
+    REG_TONE_GEN_OFF_PER      ,
+    REG_SYSTEM_STATUS         = (0xE0),
+    REG_SYSTEM_ACTIVE         = (0xFD)
+};
+// Definitions for each Gains
+
+/**
+600 x (-1~+6):8
+0b001 = 1 = 0 dB (default)
+*/
+enum DA7212MicGain{
+    MIC_PGA_MIN   =(-600), // -6dB
+    MIC_PGA_MAX   =(3600),     //36dB
+    MIC_PGA_STEP  =600
+};
+
+/**
+150 x (-27~+36):64
+0b110101 = 53 = 0 dB (default)
+*/
+enum DA7212AuxGain{
+    AUX_PGA_MIN   =(-5400), // -54dB
+    AUX_PGA_MAX   =(1500) ,       // 15dB
+    AUX_PGA_STEP  =150
+};
+
+/**
+150 x (-3~12):16
+0b0011 = 3 = 0 dB
+*/
+enum DA7212MixerInGain{
+    MIXIN_PGA_MIN   =(-450), // -4.5 dB
+    MIXIN_PGA_MAX   =(1800), // 18dB
+    MIXIN_PGA_STEP  =150
+};
+
+/**
+75 x (-111~16):128
+0b1101111 = 111(decimal!) = 0 dB (default)
+*/
+enum DA7212DigitalGain{
+    ADC_PGA_MIN       =(-8325), // -78 ~ 12dB
+    ADC_PGA_MAX       =(1200),
+    DAC_PGA_MIN       =(-8325), // -78 ~ 12dB
+    DAC_PGA_MAX       =(1200),
+    DIGITAL_PGA_STEP  =75
+};
+#define DAC_MIN_VOL    (DAC_PGA_MIN/100)
+#define DAC_MAX_VOL    (DAC_PGA_MAX/100)
+#define ADC_MIN_VOL    (ADC_PGA_MIN/100)
+#define ADC_MAX_VOL    (ADC_PGA_MAX/100)
+
+/**
+1x(-57~+6):64
+0b111001 = 57 = 0 dB
+*/
+enum DA7212HeadPhoneGain{{
+    HP_PGA_MIN    =(-5700), // -57 ~ 6dB
+    HP_PGA_MAX    =(600)
+};
+
+/**
+1x(-48~+15):64
+0b110000 = 48 = 0 dB
+*/
+enum DA7212SpeakerGain{
+    SPK_PGA_MIN   =(-4800), // -48 ~ 15dB
+    SPK_PGA_MAX   =(1500),
+    OUT_PGA_STEP  =100
+};
+
+/* REG_SR = r0x22 */
+enum DA7212SampleRate{
+    DA721X_SR_8000      =(0x1 << 0),
+    DA721X_SR_11025     =(0x2 << 0),
+    DA721X_SR_12000     =(0x3 << 0),
+    DA721X_SR_16000     =(0x5 << 0),
+    DA721X_SR_22050     =(0x6 << 0),
+    DA721X_SR_24000     =(0x7 << 0),
+    DA721X_SR_32000     =(0x9 << 0),
+    DA721X_SR_44100     =(0xA << 0),
+    DA721X_SR_48000     =(0xB << 0),
+    DA721X_SR_88200     =(0xE << 0),
+    DA721X_SR_96000     =(0xF << 0),
+};
+
     /** Create an instance of the DA7212 class
      *
      * @param i2c_sda The SDA pin of the I2C
@@ -95,8 +294,8 @@ public:
     /*
      * 1x(-57~+6):64
      * 0b111001 = 57 = 0 dB
-    void headphone_volume(uint8_t h_volume);
-    */
+     * void headphone_volume(uint8_t h_volume);
+     */
 
     /** Set the line in pre-amp volume
      *
@@ -261,8 +460,9 @@ private:
         Default_device_lrws           = 0,
         Default_device_bitlength      = 32,
 
-        Default_ADC_rate            = 32000,
-        Default_DAC_rate            = 32000,
+        Default_Sample_rate         = 32000,
+        // Default_ADC_rate            = 32000,
+        // Default_DAC_rate            = 32000,
 
         Default_device_interface_active = 0
     };
@@ -307,8 +507,9 @@ private:
     char device_bitlength;
     static const char device_data_form = 0x02;
 
-    int ADC_rate;
-    int DAC_rate;
+    // int ADC_rate;
+    // int DAC_rate;
+    int Sample_rate;
     static const bool device_usb_mode = false;
     static const bool device_clk_in_div = false;
     static const bool device_clk_out_div = false;
