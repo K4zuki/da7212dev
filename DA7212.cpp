@@ -193,6 +193,8 @@ void DA7212::microphone_boost(uint8_t mic_boost) {
 // }
 
 void DA7212::input_mute(bool mute) {
+    uint8_t mask = 0;
+    uint8_t read = 0;
     if(mute){
       mask = DA721X_MUTE_EN;
     }else{
@@ -206,7 +208,7 @@ void DA7212::input_mute(bool mute) {
         // form_cmd(path_analog);
 //         case DA721X_MIC1:
       read = i2c_register_read(REG_MIC1_CTRL);
-      read &= (~DA721X_MUTE_EN)
+      read &= (~DA721X_MUTE_EN);
       read |= mask;
       i2c_register_write(REG_MIC1_CTRL, read);
 //             i2c_reg_update_bits(REG_MIC1_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
@@ -216,11 +218,11 @@ void DA7212::input_mute(bool mute) {
     else // DA7212_LINE
     {
         read = i2c_register_read(REG_AUX_L_CTRL);
-        read &= (~DA721X_MUTE_EN)
+        read &= (~DA721X_MUTE_EN);
         read |= mask;
         i2c_register_write(REG_AUX_L_CTRL, read);
         read = i2c_register_read(REG_AUX_R_CTRL);
-        read &= (~DA721X_MUTE_EN)
+        read &= (~DA721X_MUTE_EN);
         read |= mask;
         i2c_register_write(REG_AUX_R_CTRL, read);
         // LineIn_mute_left    = mute;
@@ -275,11 +277,27 @@ void DA7212::output_power(bool on_off) {
 
 void DA7212::wordsize(int words) {
 // 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
-    device_bitlength = words;
+    // device_bitlength = words;
+    // switch(words)
+    // {
+    //     case 16:
+    //         temp = 0;
+    //         break;
+    //     case 20:
+    //         temp =  1;
+    //         break;
+    //     case 24:
+    //         temp = 2;
+    //         break;
+    //     case 32:
+    //         temp = 3;
+    //         break;
+    // }
     form_cmd(interface_format);
 }
 
 void DA7212::master(bool master) {
+// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
     device_master = master;
     form_cmd(interface_format);
 }
@@ -288,7 +306,59 @@ void DA7212::frequency(int freq) {
     Sample_rate = freq;
     // ADC_rate = freq;
     // DAC_rate = freq;
-    form_cmd(sample_rate);
+    switch(freq)
+    {
+        // case 96000:
+        // // DA721X_SR_96000     =(0xF << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 88200:
+        // // DA721X_SR_88200     =(0xE << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 48000:
+        // // DA721X_SR_48000     =(0xB << 0), //REG_MIXED_SAMPLE_MODE = 1; other=0
+        //     temp = 0x00;
+        //     if(DAC_rate == 8000) temp = 0x02;
+        //     break;
+        // case 44100:
+        // // DA721X_SR_44100     =(0xA << 0),
+        //     temp = 0x0E;
+        //     break;
+        case 32000:
+            // DA721X_SR_32000     =(0x9 << 0),
+            temp = 0x0C;
+            break;
+        // case 24000:
+        // // DA721X_SR_24000     =(0x7 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 22050:
+        // // DA721X_SR_22050     =(0x6 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 16000:
+        // // DA721X_SR_16000     =(0x5 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 12000:
+        // // DA721X_SR_12000     =(0x3 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 11025:
+        // // DA721X_SR_11025     =(0x2 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 8000:
+        //     // DA721X_SR_8000      =(0x1 << 0),
+        //     temp = 0x03;
+        //     if(DAC_rate == 48000) temp = 0x04;
+        //     break;
+        default:
+            temp = 0x0C;
+            break;
+    }
+    // form_cmd(sample_rate);
 }
 
 // void DA7212::input_highpass(bool enabled) {
@@ -567,7 +637,7 @@ void DA7212::defaulter() {
     hp_vol_right      = DA7212_Default_HP_Volume_Right;
     LineIn_vol_left   = DA7212_Default_LineIn_Volume_Left;
     LineIn_vol_right  = DA7212_Default_LineIn_Volume_Right;
-    sdt_vol           = DA7212_DF_sdt_vol;
+    // sdt_vol           = DA7212_DF_sdt_vol;
     bypass_           = Default_bypass_;
 
     ADC_source      = Default_ADC_source;
@@ -608,57 +678,52 @@ char DA7212::gen_samplerate() {
     char temp = 0;
     switch(Sample_rate)
     {
-/*
-
-        case 96000:
-        // DA721X_SR_96000     =(0xF << 0),
-            temp = 0x0E;
-            break;
-        case 88200:
-        // DA721X_SR_88200     =(0xE << 0),
-            temp = 0x0E;
-            break;
-        case 48000:
-        // DA721X_SR_48000     =(0xB << 0), //REG_MIXED_SAMPLE_MODE = 1; other=0
-            temp = 0x00;
-            if(DAC_rate == 8000) temp = 0x02;
-            break;
-        case 44100:
-        // DA721X_SR_44100     =(0xA << 0),
-            temp = 0x0E;
-            break;
-*/
+        // case 96000:
+        // // DA721X_SR_96000     =(0xF << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 88200:
+        // // DA721X_SR_88200     =(0xE << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 48000:
+        // // DA721X_SR_48000     =(0xB << 0), //REG_MIXED_SAMPLE_MODE = 1; other=0
+        //     temp = 0x00;
+        //     if(DAC_rate == 8000) temp = 0x02;
+        //     break;
+        // case 44100:
+        // // DA721X_SR_44100     =(0xA << 0),
+        //     temp = 0x0E;
+        //     break;
         case 32000:
             // DA721X_SR_32000     =(0x9 << 0),
             temp = 0x0C;
             break;
-/*
-        case 24000:
-        // DA721X_SR_24000     =(0x7 << 0),
-            temp = 0x0E;
-            break;
-        case 22050:
-        // DA721X_SR_22050     =(0x6 << 0),
-            temp = 0x0E;
-            break;
-        case 16000:
-        // DA721X_SR_16000     =(0x5 << 0),
-            temp = 0x0E;
-            break;
-        case 12000:
-        // DA721X_SR_12000     =(0x3 << 0),
-            temp = 0x0E;
-            break;
-        case 11025:
-        // DA721X_SR_11025     =(0x2 << 0),
-            temp = 0x0E;
-            break;
-        case 8000:
-            // DA721X_SR_8000      =(0x1 << 0),
-            temp = 0x03;
-            if(DAC_rate == 48000) temp = 0x04;
-            break;
-            */
+        // case 24000:
+        // // DA721X_SR_24000     =(0x7 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 22050:
+        // // DA721X_SR_22050     =(0x6 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 16000:
+        // // DA721X_SR_16000     =(0x5 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 12000:
+        // // DA721X_SR_12000     =(0x3 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 11025:
+        // // DA721X_SR_11025     =(0x2 << 0),
+        //     temp = 0x0E;
+        //     break;
+        // case 8000:
+        //     // DA721X_SR_8000      =(0x1 << 0),
+        //     temp = 0x03;
+        //     if(DAC_rate == 48000) temp = 0x04;
+        //     break;
         default:
             temp = 0x0C;
             break;
@@ -715,7 +780,7 @@ char DA7212::gen_samplerate() {
 //     i2c_register_write(REG_DAC_FILTERS5, 0x00);    //SOFT MUTE OFF!
 //     return 0;
 // }
-//
+
 // int da7212_duplex(void)    //Init path from MIC1 to Digital Audio Interface
 // {
 //     //DEBUG_PRINTF("---ticks : %d\n",ticks);
@@ -745,7 +810,7 @@ char DA7212::gen_samplerate() {
 //     printf("Start da7212_duplex!\n");
 //     return 0;
 // }
-//
+
 // int da7212_record(void)    //Init path from MIC1 to Digital Audio Interface
 // {
 //     i2c_register_write(REG_REFERENCES       , 0x08); //Enable master bias
@@ -783,7 +848,6 @@ char DA7212::gen_samplerate() {
 //     i2c_register_write(REG_DAC_FILTERS5, 0x80);    //SOFT MUTE ON!
 //
 //     i2c_register_write(REG_PLL_CTRL, 0); //  system clock is MCLK; SRM disabled; 32 kHz mode disabled; squarer at the MCLK disabled; input clock range for the PLL= 2 - 10 MHz
-
 //
 //     if (i2c_register_write(REG_SR, sampling_rate) < 0) {
 //         printf("codec_set_sample_rate: error in write reg .\n");

@@ -493,6 +493,7 @@ private:
     bool ADC_source;
     bool ADC_source_old;
     bool mic_mute;
+    uint8_t mic_boost;
     // bool mic_boost_;
     bool out_mute;
     char de_emph_code;
