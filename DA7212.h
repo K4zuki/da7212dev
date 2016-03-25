@@ -55,6 +55,8 @@
 #define DA7212_DE_EMPH_48KHZ        3
 
 #define DA721X_MCLK 12288000
+#define DA721X_MUTE_EN  (0x40)
+#define DA721X_POWER_EN (0x80)
 
 /** A class to control the I2C part of the DA7212
  *
@@ -127,7 +129,6 @@ class DA7212
      * @param mute Mute on/off
      */
     void input_mute(bool mute);
-#define DA721X_MUTE_EN (0x40)
 
     /** Mute the output
      *
@@ -281,8 +282,8 @@ private:
         REG_AUX_L_CTRL            = (0x60),
         REG_AUX_R_CTRL            ,
         REG_MICBIAS_CTRL          ,
-        REG_MIC_1_CTRL            ,
-        REG_MIC_2_CTRL            ,
+        REG_MIC1_CTRL             ,
+        REG_MIC2_CTRL             ,
         REG_MIXIN_L_CTRL          ,
         REG_MIXIN_R_CTRL          ,
         REG_ADC_L_CTRL            ,
@@ -442,7 +443,7 @@ private:
         Default_mic_mute            = DA7212_UNMUTE,
         Default_LineIn_mute_left    = 0,
         Default_LineIn_mute_right   = 0,
-        Default_mic_boost_          = 0,
+        Default_mic_boost           = 0,
         Default_out_mute            = DA7212_UNMUTE,
 
         Default_de_emph_code         = 0x00,
