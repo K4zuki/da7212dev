@@ -449,9 +449,9 @@ private:
         Default_de_emph_code         = 0x00,
         Default_ADC_highpass_enable  = 0,
 
-        Default_device_all_pwr     = 1,
-        Default_device_clk_pwr     = 1,
-        Default_device_osc_pwr     = 1,
+        // Default_device_all_pwr     = 1,
+        // Default_device_clk_pwr     = 1,
+        // Default_device_osc_pwr     = 1,
         Default_device_out_pwr     = 1,
         Default_device_dac_pwr     = 1,
         Default_device_adc_pwr     = 1,

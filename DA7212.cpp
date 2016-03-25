@@ -233,21 +233,21 @@ void DA7212::input_mute(bool mute) {
 }
 
 void DA7212::output_mute(bool mute) {
-    out_mute = mute;
-    form_cmd(path_digital);
-//         case DA721X_DAC:
-//             i2c_reg_update_bits(REG_DAC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_DAC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         case DA721X_HP:
-//             i2c_reg_update_bits(REG_HP_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_HP_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         case DA721X_SPEAKER:
-//             i2c_reg_update_bits(REG_LINE_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         default:
-//         break;
+    // out_mute = mute;
+    // form_cmd(path_digital);
+        // case DA721X_DAC:
+        //     i2c_reg_update_bits(REG_DAC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     i2c_reg_update_bits(REG_DAC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // case DA721X_HP:
+        //     i2c_reg_update_bits(REG_HP_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     i2c_reg_update_bits(REG_HP_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // case DA721X_SPEAKER:
+        //     i2c_reg_update_bits(REG_LINE_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // default:
+        // break;
 }
 
 void DA7212::input_power(bool on_off) {
@@ -271,94 +271,106 @@ void DA7212::input_power(bool on_off) {
 void DA7212::output_power(bool on_off) {
     device_dac_pwr = on_off;
     device_out_pwr = on_off;
+        // case DA721X_DAC:
+        //     i2c_reg_update_bits(REG_DAC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     i2c_reg_update_bits(REG_DAC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // case DA721X_HP:
+        //     i2c_reg_update_bits(REG_HP_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     i2c_reg_update_bits(REG_HP_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // case DA721X_SPEAKER:
+        //     i2c_reg_update_bits(REG_LINE_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
+        //     break;
+        // default:
+        // break;
 
     form_cmd(power_control);
 }
 
 void DA7212::wordsize(int words) {
-// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
-    // device_bitlength = words;
-    // switch(words)
-    // {
-    //     case 16:
-    //         temp = 0;
-    //         break;
-    //     case 20:
-    //         temp =  1;
-    //         break;
-    //     case 24:
-    //         temp = 2;
-    //         break;
-    //     case 32:
-    //         temp = 3;
-    //         break;
-    // }
-    form_cmd(interface_format);
+// 0x29 DAI_CTRL| DAI_EN[7](0)| DAI_OE[6](0) |DAI_TDM_MODE_EN[5](0)| DAI_MONO_MODE_EN[4](0) | DAI_WORD_LENGTH[3..2](10)| DAI_FORMAT[1..0](00) |
+    uint8_t temp = 3;
+    switch(words)
+    {
+        case 16:
+            temp = 0;
+            break;
+        case 20:
+            temp =  1;
+            break;
+        case 24:
+            temp = 2;
+            break;
+        case 32:
+            temp = 3;
+            break;
+    }
+    i2c_register_write(REG_DAI_CTRL, temp);
+    // form_cmd(interface_format);
 }
 
 void DA7212::master(bool master) {
-// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
-    device_master = master;
-    form_cmd(interface_format);
+// 0x28 DAI_CLK_MODE| DAI_CLK_EN[7](0)| Reserved[6..4](000)| DAI_WCLK_POL[3](0)| DAI_CLK_POL[2](0)| DAI_BCLKS_PER_WCLK[1..0](01)|
+    uint8_t temp = 0x01;
+    if(master){
+        temp |= 0x80;
+    }else{
+        temp |= 0x00;
+    }
+    i2c_register_write(REG_DAI_CLK_MODE, temp);
+    // device_master = master;
+    // form_cmd(interface_format);
 }
 
 void DA7212::frequency(int freq) {
-    Sample_rate = freq;
+    // Sample_rate = freq;
     // ADC_rate = freq;
     // DAC_rate = freq;
+    uint8_t temp = DA721X_SR_32000;
+    uint8_t mixedrate = 0;
     switch(freq)
     {
-        // case 96000:
-        // // DA721X_SR_96000     =(0xF << 0),
-        //     temp = 0x0E;
-        //     break;
+        case 96000:
+            temp = DA721X_SR_96000;
+            break;
         // case 88200:
-        // // DA721X_SR_88200     =(0xE << 0),
-        //     temp = 0x0E;
+        //     temp = DA721X_SR_88200;
         //     break;
-        // case 48000:
-        // // DA721X_SR_48000     =(0xB << 0), //REG_MIXED_SAMPLE_MODE = 1; other=0
-        //     temp = 0x00;
-        //     if(DAC_rate == 8000) temp = 0x02;
-        //     break;
+        case 48000:
+            temp = DA721X_SR_48000;
+            mixedrate = 1;
+            break;
         // case 44100:
-        // // DA721X_SR_44100     =(0xA << 0),
-        //     temp = 0x0E;
+        //     temp = DA721X_SR_44100;
         //     break;
         case 32000:
-            // DA721X_SR_32000     =(0x9 << 0),
-            temp = 0x0C;
+            temp = DA721X_SR_32000;
             break;
-        // case 24000:
-        // // DA721X_SR_24000     =(0x7 << 0),
-        //     temp = 0x0E;
-        //     break;
+        case 24000:
+            temp = DA721X_SR_24000;
+            break;
         // case 22050:
-        // // DA721X_SR_22050     =(0x6 << 0),
-        //     temp = 0x0E;
+        //     temp = DA721X_SR_22050;
         //     break;
-        // case 16000:
-        // // DA721X_SR_16000     =(0x5 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 12000:
-        // // DA721X_SR_12000     =(0x3 << 0),
-        //     temp = 0x0E;
-        //     break;
+        case 16000:
+            temp = DA721X_SR_16000;
+            break;
+        case 12000:
+            temp = DA721X_SR_12000;
+            break;
         // case 11025:
-        // // DA721X_SR_11025     =(0x2 << 0),
-        //     temp = 0x0E;
+        //     temp = DA721X_SR_11025;
         //     break;
-        // case 8000:
-        //     // DA721X_SR_8000      =(0x1 << 0),
-        //     temp = 0x03;
-        //     if(DAC_rate == 48000) temp = 0x04;
-        //     break;
+        case 8000:
+            temp = DA721X_SR_8000;
+            break;
         default:
-            temp = 0x0C;
+            temp = DA721X_SR_32000;
             break;
     }
-    // form_cmd(sample_rate);
+    i2c_register_write(REG_SR, temp);
+    i2c_register_write(REG_MIXED_SAMPLE_MODE, mixedrate);
 }
 
 // void DA7212::input_highpass(bool enabled) {
@@ -367,15 +379,17 @@ void DA7212::frequency(int freq) {
 // }
 
 void DA7212::output_softmute(bool enabled) {
-    out_mute = enabled;
+    // out_mute = enabled;
+
     // form_cmd(path_digital);
     i2c_register_write(REG_DAC_FILTERS5, (enabled ? 0x80 : 0x00));    //SOFT MUTE ON! for DAC
 }
 
 void DA7212::interface_switch(bool on_off) {
 // 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
-    device_interface_active = on_off;
-    form_cmd(interface_activation);
+    i2c_register_write(REG_DAI_CTRL, (enabled ? 0x80 : 0x00));    //DAI_EN[7]
+    // device_interface_active = on_off;
+    // form_cmd(interface_activation);
 }
 
 // void DA7212::sidetone(float sidetone_vol) {
@@ -389,7 +403,8 @@ void DA7212::interface_switch(bool on_off) {
 // }
 
 void DA7212::reset() {
-    form_cmd(reset_reg);
+    i2c_register_write(REG_CIF_CTRL, 0x80);
+    // form_cmd(reset_reg);
 }
 
 void DA7212::start() {
@@ -565,11 +580,11 @@ void DA7212::form_cmd(reg_address add) {
         //     cmd |= mic_boost_;
         //     break;
 
-        case path_digital:
-            cmd |= out_mute << 3;
-            cmd |= ((de_emph_code & 0x3) << 1);
-            cmd |= ADC_highpass_enable;
-            break;
+        // case path_digital:
+        //     cmd |= out_mute << 3;
+        //     cmd |= ((de_emph_code & 0x3) << 1);
+        //     cmd |= ADC_highpass_enable;
+        //     break;
 
         case power_control:
             cmd |= !device_all_pwr << 7;
@@ -582,37 +597,37 @@ void DA7212::form_cmd(reg_address add) {
             cmd |= !device_lni_pwr << 0;
             break;
 
-        case interface_format:
-            cmd |= device_master << 6;
-            cmd |= device_lrswap << 5;
-            cmd |= device_lrws     << 4;
-            temp = 0;
-            switch(device_bitlength)
-            {
-                case 16:
-                    temp = 0;
-                    break;
-                case 20:
-                    temp =  1;
-                    break;
-                case 24:
-                    temp = 2;
-                    break;
-                case 32:
-                    temp = 3;
-                    break;
-            }
-            cmd |= (temp & 0x03) << 2;
-            cmd |= (device_data_form & 0x03);
-            break;
+        // case interface_format:
+        //     cmd |= device_master << 6;
+        //     cmd |= device_lrswap << 5;
+        //     cmd |= device_lrws     << 4;
+        //     temp = 0;
+        //     switch(device_bitlength)
+        //     {
+        //         case 16:
+        //             temp = 0;
+        //             break;
+        //         case 20:
+        //             temp =  1;
+        //             break;
+        //         case 24:
+        //             temp = 2;
+        //             break;
+        //         case 32:
+        //             temp = 3;
+        //             break;
+        //     }
+        //     cmd |= (temp & 0x03) << 2;
+        //     cmd |= (device_data_form & 0x03);
+        //     break;
 
-        case sample_rate:
-            temp = gen_samplerate();
-            cmd = device_usb_mode;
-            cmd |= (temp & 0x03) << 1;
-            cmd |= device_clk_in_div << 6;
-            cmd |= device_clk_out_div << 7;
-            break;
+        // case sample_rate:
+        //     temp = gen_samplerate();
+        //     cmd = device_usb_mode;
+        //     cmd |= (temp & 0x03) << 1;
+        //     cmd |= device_clk_in_div << 6;
+        //     cmd |= device_clk_out_div << 7;
+        //     break;
 
         case interface_activation:
             cmd = device_interface_active;
@@ -653,9 +668,9 @@ void DA7212::defaulter() {
     de_emph_code          = Default_de_emph_code;
     ADC_highpass_enable   = Default_ADC_highpass_enable;
 
-    device_all_pwr  = Default_device_all_pwr;
-    device_clk_pwr  = Default_device_clk_pwr;
-    device_osc_pwr  = Default_device_osc_pwr;
+    // device_all_pwr  = Default_device_all_pwr;
+    // device_clk_pwr  = Default_device_clk_pwr;
+    // device_osc_pwr  = Default_device_osc_pwr;
     device_out_pwr  = Default_device_out_pwr;
     device_dac_pwr  = Default_device_dac_pwr;
     device_adc_pwr  = Default_device_dac_pwr;
@@ -674,62 +689,53 @@ void DA7212::defaulter() {
     device_interface_active  = Default_device_interface_active;
 }
 
-char DA7212::gen_samplerate() {
-    char temp = 0;
-    switch(Sample_rate)
-    {
-        // case 96000:
-        // // DA721X_SR_96000     =(0xF << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 88200:
-        // // DA721X_SR_88200     =(0xE << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 48000:
-        // // DA721X_SR_48000     =(0xB << 0), //REG_MIXED_SAMPLE_MODE = 1; other=0
-        //     temp = 0x00;
-        //     if(DAC_rate == 8000) temp = 0x02;
-        //     break;
-        // case 44100:
-        // // DA721X_SR_44100     =(0xA << 0),
-        //     temp = 0x0E;
-        //     break;
-        case 32000:
-            // DA721X_SR_32000     =(0x9 << 0),
-            temp = 0x0C;
-            break;
-        // case 24000:
-        // // DA721X_SR_24000     =(0x7 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 22050:
-        // // DA721X_SR_22050     =(0x6 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 16000:
-        // // DA721X_SR_16000     =(0x5 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 12000:
-        // // DA721X_SR_12000     =(0x3 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 11025:
-        // // DA721X_SR_11025     =(0x2 << 0),
-        //     temp = 0x0E;
-        //     break;
-        // case 8000:
-        //     // DA721X_SR_8000      =(0x1 << 0),
-        //     temp = 0x03;
-        //     if(DAC_rate == 48000) temp = 0x04;
-        //     break;
-        default:
-            temp = 0x0C;
-            break;
-    }
-    return temp;
-}
+// char DA7212::gen_samplerate() {
+//     uint8_t temp = DA721X_SR_32000;
+//     uint8_t mixedrate = 0;
+//     switch(Sample_rate)
+//     {
+//         case 96000:
+//             temp = DA721X_SR_96000;
+//             break;
+//         case 88200:
+//             temp = DA721X_SR_88200;
+//             break;
+//         case 48000:
+//             temp = DA721X_SR_48000;
+//             mixedrate = 1;
+//             break;
+//         case 44100:
+//             temp = DA721X_SR_44100;
+//             break;
+//         case 32000:
+//             temp = DA721X_SR_32000;
+//             break;
+//         case 24000:
+//             temp = DA721X_SR_24000;
+//             break;
+//         case 22050:
+//             temp = DA721X_SR_22050;
+//             break;
+//         case 16000:
+//             temp = DA721X_SR_16000;
+//             break;
+//         case 12000:
+//             temp = DA721X_SR_12000;
+//             break;
+//         case 11025:
+//             temp = DA721X_SR_11025;
+//             break;
+//         case 8000:
+//             temp = DA721X_SR_8000;
+//             break;
+//         default:
+//             temp = DA721X_SR_32000;
+//             break;
+//     }
+//     i2c_register_write(REG_SR, temp);
+//     i2c_register_write(REG_MIXED_SAMPLE_MODE, mixedrate);
+//     return temp;
+// }
 
 // int da7212_I2Splayback(void)    //Init path from Digital Audio Interface to HP or SPK
 // {
@@ -839,7 +845,7 @@ char DA7212::gen_samplerate() {
 // }
 
 // /* Supported PLL input frequencies are 5MHz - 54MHz. */
-//
+
 // int da7212_set_dai_pll(uint8_t sampling_rate) {
 //     uint8_t pll_ctrl, indiv_bits, indiv;
 //     uint8_t pll_frac_top, pll_frac_bot, pll_integer;
