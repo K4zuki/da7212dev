@@ -37,7 +37,7 @@
 #define DA7212_Default_HP_Volume_Right        (57)
 #define DA7212_Default_LineIn_Volume_Left     (53)
 #define DA7212_Default_LineIn_Volume_Right    (53)
-#define DA7212_DF_sdt_vol                     0
+// #define DA7212_DF_sdt_vol                     0
 
 const uint8_t base_address = 0x34; //0x1A in 7bit address
 
@@ -193,21 +193,40 @@ void DA7212::microphone_boost(uint8_t mic_boost) {
 // }
 
 void DA7212::input_mute(bool mute) {
+    if(mute){
+      mask = DA721X_MUTE_EN;
+    }else{
+      mask = 0;
+    }
     if(ADC_source == DA7212_MIC)
     {
-        mic_mute = mute;
-        form_cmd(path_analog);
+      // uint8_t read = 0;
+      // uint8_t mask = 0;
+        // mic_mute = mute;
+        // form_cmd(path_analog);
 //         case DA721X_MIC1:
+      read = i2c_register_read(REG_MIC1_CTRL);
+      read &= (~DA721X_MUTE_EN)
+      read |= mask;
+      i2c_register_write(REG_MIC1_CTRL, read);
 //             i2c_reg_update_bits(REG_MIC1_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
 //             i2c_reg_update_bits(REG_MIC2_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
 //             break;
     }
     else // DA7212_LINE
     {
-        LineIn_mute_left    = mute;
-        LineIn_mute_right   = mute;
-        form_cmd(line_in_vol_left);
-        form_cmd(line_in_vol_right);
+        read = i2c_register_read(REG_AUX_L_CTRL);
+        read &= (~DA721X_MUTE_EN)
+        read |= mask;
+        i2c_register_write(REG_AUX_L_CTRL, read);
+        read = i2c_register_read(REG_AUX_R_CTRL);
+        read &= (~DA721X_MUTE_EN)
+        read |= mask;
+        i2c_register_write(REG_AUX_R_CTRL, read);
+        // LineIn_mute_left    = mute;
+        // LineIn_mute_right   = mute;
+        // form_cmd(line_in_vol_left);
+        // form_cmd(line_in_vol_right);
     }
 }
 
@@ -215,12 +234,8 @@ void DA7212::output_mute(bool mute) {
     out_mute = mute;
     form_cmd(path_digital);
 //         case DA721X_DAC:
-// #ifdef DA7212_SOFTMUTE_EN
-//             i2c_register_write(REG_DAC_FILTERS5, (mute ? 0x80 : 0x00));    //SOFT MUTE ON! for DAC
-// #else
 //             i2c_reg_update_bits(REG_DAC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
 //             i2c_reg_update_bits(REG_DAC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-// #endif
 //             break;
 //         case DA721X_HP:
 //             i2c_reg_update_bits(REG_HP_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
@@ -259,6 +274,7 @@ void DA7212::output_power(bool on_off) {
 }
 
 void DA7212::wordsize(int words) {
+// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
     device_bitlength = words;
     form_cmd(interface_format);
 }
@@ -287,6 +303,7 @@ void DA7212::output_softmute(bool enabled) {
 }
 
 void DA7212::interface_switch(bool on_off) {
+// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
     device_interface_active = on_off;
     form_cmd(interface_activation);
 }
@@ -455,28 +472,28 @@ void DA7212::form_cmd(reg_address add) {
         //     cmd |= temp & 0x7F;
         //     break;
 
-        case path_analog:
-            temp = int(sdt_vol * 5);
-            char vol_code = 0;
-            switch(temp)
-            {
-                case 5:
-                    vol_code = 0x0C;
-                    break;
-                case 0:
-                    vol_code = 0x00;
-                    break;
-                default:
-                    vol_code = ((0x04 - temp)&0x07) | 0x08;
-                    break;
-            }
-            cmd = vol_code << 5;
-            cmd |= 1 << 4;
-            cmd |= bypass_ << 3;
-            cmd |= ADC_source << 2;
-            cmd |= mic_mute << 1;
-            cmd |= mic_boost_;
-            break;
+        // case path_analog:
+        //     temp = int(sdt_vol * 5);
+        //     char vol_code = 0;
+        //     switch(temp)
+        //     {
+        //         case 5:
+        //             vol_code = 0x0C;
+        //             break;
+        //         case 0:
+        //             vol_code = 0x00;
+        //             break;
+        //         default:
+        //             vol_code = ((0x04 - temp)&0x07) | 0x08;
+        //             break;
+        //     }
+        //     cmd = vol_code << 5;
+        //     cmd |= 1 << 4;
+        //     cmd |= bypass_ << 3;
+        //     cmd |= ADC_source << 2;
+        //     cmd |= mic_mute << 1;
+        //     cmd |= mic_boost_;
+        //     break;
 
         case path_digital:
             cmd |= out_mute << 3;
@@ -496,7 +513,6 @@ void DA7212::form_cmd(reg_address add) {
             break;
 
         case interface_format:
-// 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
             cmd |= device_master << 6;
             cmd |= device_lrswap << 5;
             cmd |= device_lrws     << 4;
@@ -562,7 +578,7 @@ void DA7212::defaulter() {
     LineIn_mute_right = Default_LineIn_mute_right;
 
 
-    mic_boost_            = Default_mic_boost_;
+    mic_boost             = Default_mic_boost;
     out_mute              = Default_out_mute;
     de_emph_code          = Default_de_emph_code;
     ADC_highpass_enable   = Default_ADC_highpass_enable;
