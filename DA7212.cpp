@@ -387,7 +387,7 @@ void DA7212::output_softmute(bool enabled) {
 
 void DA7212::interface_switch(bool on_off) {
 // 0x29 DAI_CTRL| DAI_EN[7]| DAI_OE[6] |DAI_TDM_MODE_EN[5]| DAI_MONO_MODE_EN[4]| DAI_WORD_LENGTH[3..2]| DAI_FORMAT[1..0]|
-    i2c_register_write(REG_DAI_CTRL, (enabled ? 0x80 : 0x00));    //DAI_EN[7]
+    i2c_register_write(REG_DAI_CTRL, (on_off ? 0x80 : 0x00));    //DAI_EN[7]
     // device_interface_active = on_off;
     // form_cmd(interface_activation);
 }
