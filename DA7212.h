@@ -1,5 +1,5 @@
 /**
-* @author Giles Barton-Owen
+* @author Giles Barton-Owen; fork by Kazuki Yamamoto
 *
 * @section LICENSE
 *
