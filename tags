@@ -4,8 +4,8 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-ADC_MAX_VOL	DA7212.h	388;"	d
-ADC_MIN_VOL	DA7212.h	387;"	d
+ADC_MAX_VOL	DA7212.h	/^        ADC_MAX_VOL = (ADC_PGA_MAX \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
+ADC_MIN_VOL	DA7212.h	/^        ADC_MIN_VOL = (ADC_PGA_MIN \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 ADC_PGA_MAX	DA7212.h	/^        ADC_PGA_MAX = (1200),$/;"	e	enum:DA7212::DA7212DigitalGain
 ADC_PGA_MIN	DA7212.h	/^        ADC_PGA_MIN = (-8325),  \/\/ -78 ~ 12dB$/;"	e	enum:DA7212::DA7212DigitalGain
 ADC_highpass_enable	DA7212.h	/^    bool ADC_highpass_enable;$/;"	m	class:DA7212
@@ -60,8 +60,7 @@ DA721X_SR_48000	DA7212.h	/^        DA721X_SR_48000 = (0xB << 0),$/;"	e	enum:DA72
 DA721X_SR_8000	DA7212.h	/^        DA721X_SR_8000 = (0x1 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 DA721X_SR_88200	DA7212.h	/^        DA721X_SR_88200 = (0xE << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 DA721X_SR_96000	DA7212.h	/^        DA721X_SR_96000 = (0xF << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DAC_MAX_VOL	DA7212.h	386;"	d
-DAC_MIN_VOL	DA7212.h	385;"	d
+DAC_MAX_VOL	DA7212.h	/^        DAC_MAX_VOL = (DAC_PGA_MAX \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MAX	DA7212.h	/^        DAC_PGA_MAX = (1200),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MIN	DA7212.h	/^        DAC_PGA_MIN = (-8325),  \/\/ -78 ~ 12dB$/;"	e	enum:DA7212::DA7212DigitalGain
 DIGITAL_PGA_STEP	DA7212.h	/^        DIGITAL_PGA_STEP = 75$/;"	e	enum:DA7212::DA7212DigitalGain

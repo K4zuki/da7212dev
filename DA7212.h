@@ -58,10 +58,12 @@
 #define DA721X_POWER_EN (0x80)
 
 /** A class to control the I2C part of the DA7212
- *
+ * - 12.288MHz MCLK sent from FRDM
+ * - BitClk aka. BCLK for DA7212
+ * - WordSelect is WCLK for DA7212
  */
 class DA7212 {
-   public:  // NOLINT
+   public:
     /** Create an instance of the DA7212 class
      *
      * @param i2c_sda The SDA pin of the I2C
@@ -223,7 +225,7 @@ class DA7212 {
     */
     void stop();
 
-   private:  // NOLINT
+   private:
     enum DA7212Registers {
         REG_STATUS1 = (0x02),
         REG_PLL_STATUS,
@@ -381,11 +383,12 @@ class DA7212 {
         DAC_PGA_MIN = (-8325),  // -78 ~ 12dB
         DAC_PGA_MAX = (1200),
         DIGITAL_PGA_STEP = 75
+
+        DAC_MIN_VOL = (DAC_PGA_MIN / 100),
+        DAC_MAX_VOL = (DAC_PGA_MAX / 100),
+        ADC_MIN_VOL = (ADC_PGA_MIN / 100),
+        ADC_MAX_VOL = (ADC_PGA_MAX / 100),
     };
-#define DAC_MIN_VOL (DAC_PGA_MIN / 100)
-#define DAC_MAX_VOL (DAC_PGA_MAX / 100)
-#define ADC_MIN_VOL (ADC_PGA_MIN / 100)
-#define ADC_MAX_VOL (ADC_PGA_MAX / 100)
 
     /**
     1x(-57~+6):64
@@ -448,9 +451,9 @@ class DA7212 {
         Default_de_emph_code = 0x00,
         Default_ADC_highpass_enable = 0,
 
-        // Default_device_all_pwr     = 1,
-        // Default_device_clk_pwr     = 1,
-        // Default_device_osc_pwr     = 1,
+        // Default_device_all_pwr = 1,
+        // Default_device_clk_pwr = 1,
+        // Default_device_osc_pwr = 1,
         Default_device_out_pwr = 1,
         Default_device_dac_pwr = 1,
         Default_device_adc_pwr = 1,
@@ -463,8 +466,8 @@ class DA7212 {
         Default_device_bitlength = 32,
 
         Default_Sample_rate = 32000,
-        // Default_ADC_rate            = 32000,
-        // Default_DAC_rate            = 32000,
+        // Default_ADC_rate = 32000,
+        // Default_DAC_rate = 32000,
 
         Default_device_interface_active = 0
     };
