@@ -13,7 +13,8 @@ ADC_source	DA7212.h	/^    bool ADC_source;$/;"	m	class:DA7212
 ADC_source_old	DA7212.h	/^    bool ADC_source_old;$/;"	m	class:DA7212
 AUX_PGA_MAX	DA7212.h	/^        AUX_PGA_MAX = (1500),   \/\/ 15dB$/;"	e	enum:DA7212::DA7212AuxGain
 AUX_PGA_MIN	DA7212.h	/^        AUX_PGA_MIN = (-5400),  \/\/ -54dB$/;"	e	enum:DA7212::DA7212AuxGain
-AUX_PGA_STEP	DA7212.h	/^        AUX_PGA_STEP = 150$/;"	e	enum:DA7212::DA7212AuxGain
+AUX_PGA_POR	DA7212.h	/^        AUX_PGA_POR = 5400,$/;"	e	enum:DA7212::DA7212AuxGain
+AUX_PGA_STEP	DA7212.h	/^        AUX_PGA_STEP = 150,$/;"	e	enum:DA7212::DA7212AuxGain
 DA7212	DA7212.cpp	/^DA7212::DA7212(PinName i2c_sda, PinName i2c_scl) : i2c(i2c_sda, i2c_scl) {$/;"	f	class:DA7212
 DA7212	DA7212.h	/^class DA7212 {$/;"	c
 DA7212AuxGain	DA7212.h	/^    enum DA7212AuxGain {$/;"	g	class:DA7212
@@ -49,21 +50,11 @@ DA7212_defaults	DA7212.h	/^    enum DA7212_defaults {$/;"	g	class:DA7212
 DA721X_MCLK	DA7212.h	56;"	d
 DA721X_MUTE_EN	DA7212.h	57;"	d
 DA721X_POWER_EN	DA7212.h	58;"	d
-DA721X_SR_11025	DA7212.h	/^        DA721X_SR_11025 = (0x2 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_12000	DA7212.h	/^        DA721X_SR_12000 = (0x3 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_16000	DA7212.h	/^        DA721X_SR_16000 = (0x5 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_22050	DA7212.h	/^        DA721X_SR_22050 = (0x6 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_24000	DA7212.h	/^        DA721X_SR_24000 = (0x7 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_32000	DA7212.h	/^        DA721X_SR_32000 = (0x9 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_44100	DA7212.h	/^        DA721X_SR_44100 = (0xA << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_48000	DA7212.h	/^        DA721X_SR_48000 = (0xB << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_8000	DA7212.h	/^        DA721X_SR_8000 = (0x1 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_88200	DA7212.h	/^        DA721X_SR_88200 = (0xE << 0),$/;"	e	enum:DA7212::DA7212SampleRate
-DA721X_SR_96000	DA7212.h	/^        DA721X_SR_96000 = (0xF << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 DAC_MAX_VOL	DA7212.h	/^        DAC_MAX_VOL = (DAC_PGA_MAX \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_MIN_VOL	DA7212.h	/^        DAC_MIN_VOL = (DAC_PGA_MIN \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MAX	DA7212.h	/^        DAC_PGA_MAX = (1200),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MIN	DA7212.h	/^        DAC_PGA_MIN = (-8325),  \/\/ -78 ~ 12dB$/;"	e	enum:DA7212::DA7212DigitalGain
+DIGITAL_PGA_POR	DA7212.h	/^        DIGITAL_PGA_POR = 8325,$/;"	e	enum:DA7212::DA7212DigitalGain
 DIGITAL_PGA_STEP	DA7212.h	/^        DIGITAL_PGA_STEP = 75,$/;"	e	enum:DA7212::DA7212DigitalGain
 Default_ADC_highpass_enable	DA7212.h	/^        Default_ADC_highpass_enable = 0,$/;"	e	enum:DA7212::DA7212_defaults
 Default_ADC_source	DA7212.h	/^        Default_ADC_source = DA7212_LINE,$/;"	e	enum:DA7212::DA7212_defaults
@@ -85,7 +76,9 @@ Default_device_out_pwr	DA7212.h	/^        Default_device_out_pwr = 1,$/;"	e	enum
 Default_mic_boost	DA7212.h	/^        Default_mic_boost = 0,$/;"	e	enum:DA7212::DA7212_defaults
 Default_mic_mute	DA7212.h	/^        Default_mic_mute = DA7212_UNMUTE,$/;"	e	enum:DA7212::DA7212_defaults
 Default_out_mute	DA7212.h	/^        Default_out_mute = DA7212_UNMUTE,$/;"	e	enum:DA7212::DA7212_defaults
-HP_PGA_MAX	DA7212.h	/^        HP_PGA_MAX = (600)$/;"	e	enum:DA7212::DA7212HeadPhoneGain
+GainConvert	DA7212.h	/^    GainConvert(int32_t _min, int32_t _max, int32_t _step, int32_t _por, int32_t _mask, int32_t _width) {$/;"	f	class:GainConvert
+GainConvert	DA7212.h	/^class GainConvert {$/;"	c
+HP_PGA_MAX	DA7212.h	/^        HP_PGA_MAX = (600),$/;"	e	enum:DA7212::DA7212HeadPhoneGain
 HP_PGA_MIN	DA7212.h	/^        HP_PGA_MIN = (-5700),  \/\/ -57 ~ 6dB$/;"	e	enum:DA7212::DA7212HeadPhoneGain
 LineIn_mute_left	DA7212.h	/^    bool LineIn_mute_left, LineIn_mute_right;$/;"	m	class:DA7212
 LineIn_mute_right	DA7212.h	/^    bool LineIn_mute_left, LineIn_mute_right;$/;"	m	class:DA7212
@@ -93,11 +86,13 @@ LineIn_vol_left	DA7212.h	/^    float LineIn_vol_left, LineIn_vol_right;$/;"	m	cl
 LineIn_vol_right	DA7212.h	/^    float LineIn_vol_left, LineIn_vol_right;$/;"	m	class:DA7212
 MIC_PGA_MAX	DA7212.h	/^        MIC_PGA_MAX = (3600),  \/\/ 36dB$/;"	e	enum:DA7212::DA7212MicGain
 MIC_PGA_MIN	DA7212.h	/^        MIC_PGA_MIN = (-600),  \/\/ -6dB$/;"	e	enum:DA7212::DA7212MicGain
-MIC_PGA_STEP	DA7212.h	/^        MIC_PGA_STEP = 600$/;"	e	enum:DA7212::DA7212MicGain
+MIC_PGA_POR	DA7212.h	/^        MIC_PGA_POR = 600,$/;"	e	enum:DA7212::DA7212MicGain
+MIC_PGA_STEP	DA7212.h	/^        MIC_PGA_STEP = 600,$/;"	e	enum:DA7212::DA7212MicGain
 MIXIN_PGA_MAX	DA7212.h	/^        MIXIN_PGA_MAX = (1800),  \/\/ 18dB$/;"	e	enum:DA7212::DA7212MixerInGain
 MIXIN_PGA_MIN	DA7212.h	/^        MIXIN_PGA_MIN = (-450),  \/\/ -4.5 dB$/;"	e	enum:DA7212::DA7212MixerInGain
-MIXIN_PGA_STEP	DA7212.h	/^        MIXIN_PGA_STEP = 150$/;"	e	enum:DA7212::DA7212MixerInGain
-OUT_PGA_STEP	DA7212.h	/^        OUT_PGA_STEP = 100$/;"	e	enum:DA7212::DA7212SpeakerGain
+MIXIN_PGA_POR	DA7212.h	/^        MIXIN_PGA_POR = 450,$/;"	e	enum:DA7212::DA7212MixerInGain
+MIXIN_PGA_STEP	DA7212.h	/^        MIXIN_PGA_STEP = 150,$/;"	e	enum:DA7212::DA7212MixerInGain
+OUT_PGA_STEP	DA7212.h	/^        OUT_PGA_STEP = 100 HP_PGA_POR = 5700,$/;"	e	enum:DA7212::DA7212HeadPhoneGain
 REG_ADC_FILTERS1	DA7212.h	/^        REG_ADC_FILTERS1,$/;"	e	enum:DA7212::DA7212Registers
 REG_ADC_L_CTRL	DA7212.h	/^        REG_ADC_L_CTRL,$/;"	e	enum:DA7212::DA7212Registers
 REG_ADC_L_GAIN	DA7212.h	/^        REG_ADC_L_GAIN,$/;"	e	enum:DA7212::DA7212Registers
@@ -213,17 +208,18 @@ REG_TONE_GEN_OFF_PER	DA7212.h	/^        REG_TONE_GEN_OFF_PER,$/;"	e	enum:DA7212:
 REG_TONE_GEN_ON_PER	DA7212.h	/^        REG_TONE_GEN_ON_PER,$/;"	e	enum:DA7212::DA7212Registers
 SPK_PGA_MAX	DA7212.h	/^        SPK_PGA_MAX = (1500),$/;"	e	enum:DA7212::DA7212SpeakerGain
 SPK_PGA_MIN	DA7212.h	/^        SPK_PGA_MIN = (-4800),  \/\/ -48 ~ 15dB$/;"	e	enum:DA7212::DA7212SpeakerGain
-SR11k	DA7212.h	/^        SR11k = DA721X_SR_11025,$/;"	e	enum:DA7212::DA7212SampleRate
-SR12k	DA7212.h	/^        SR12k = DA721X_SR_12000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR16k	DA7212.h	/^        SR16k = DA721X_SR_16000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR22k	DA7212.h	/^        SR22k = DA721X_SR_22050,$/;"	e	enum:DA7212::DA7212SampleRate
-SR24k	DA7212.h	/^        SR24k = DA721X_SR_24000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR32k	DA7212.h	/^        SR32k = DA721X_SR_32000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR44k	DA7212.h	/^        SR44k = DA721X_SR_44100,$/;"	e	enum:DA7212::DA7212SampleRate
-SR48k	DA7212.h	/^        SR48k = DA721X_SR_48000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR88k	DA7212.h	/^        SR88k = DA721X_SR_88200,$/;"	e	enum:DA7212::DA7212SampleRate
-SR8k	DA7212.h	/^        SR8k = DA721X_SR_8000,$/;"	e	enum:DA7212::DA7212SampleRate
-SR96k	DA7212.h	/^        SR96k = DA721X_SR_96000,$/;"	e	enum:DA7212::DA7212SampleRate
+SPK_PGA_POR	DA7212.h	/^        SPK_PGA_POR = 4800,$/;"	e	enum:DA7212::DA7212SpeakerGain
+SR11k	DA7212.h	/^        SR11k = (0x2 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR12k	DA7212.h	/^        SR12k = (0x3 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR16k	DA7212.h	/^        SR16k = (0x5 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR22k	DA7212.h	/^        SR22k = (0x6 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR24k	DA7212.h	/^        SR24k = (0x7 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR32k	DA7212.h	/^        SR32k = (0x9 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR44k	DA7212.h	/^        SR44k = (0xA << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR48k	DA7212.h	/^        SR48k = (0xB << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR88k	DA7212.h	/^        SR88k = (0xE << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR8k	DA7212.h	/^        SR8k = (0x1 << 0),$/;"	e	enum:DA7212::DA7212SampleRate
+SR96k	DA7212.h	/^        SR96k = (0xF << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 Sample_rate	DA7212.h	/^    int Sample_rate;$/;"	m	class:DA7212
 address	DA7212.h	/^    uint8_t address;$/;"	m	class:DA7212
 all	DA7212.h	/^        all = 0xFF$/;"	e	enum:DA7212::reg_address
@@ -268,16 +264,20 @@ interface_switch	DA7212.cpp	/^void DA7212::interface_switch(bool on_off) {$/;"	f
 line_in_vol_left	DA7212.h	/^        line_in_vol_left = 0x00,$/;"	e	enum:DA7212::reg_address
 line_in_vol_right	DA7212.h	/^        line_in_vol_right = 0x01,$/;"	e	enum:DA7212::reg_address
 linein_volume	DA7212.cpp	/^void DA7212::linein_volume(uint8_t LineIn_volume) {$/;"	f	class:DA7212
+mask	DA7212.h	/^    int32_t mask;$/;"	m	class:GainConvert
 master	DA7212.cpp	/^void DA7212::master(bool master) {$/;"	f	class:DA7212
+max	DA7212.h	/^    int32_t max;$/;"	m	class:GainConvert
 mic_boost	DA7212.h	/^    uint8_t mic_boost;$/;"	m	class:DA7212
 mic_mute	DA7212.h	/^    bool mic_mute;$/;"	m	class:DA7212
 microphone_boost	DA7212.cpp	/^void DA7212::microphone_boost(uint8_t mic_boost) {$/;"	f	class:DA7212
+min	DA7212.h	/^    int32_t min;$/;"	m	class:GainConvert
 out_mute	DA7212.h	/^    bool out_mute;$/;"	m	class:DA7212
 output_mute	DA7212.cpp	/^void DA7212::output_mute(bool mute) {$/;"	f	class:DA7212
 output_power	DA7212.cpp	/^void DA7212::output_power(bool on_off) {$/;"	f	class:DA7212
 output_softmute	DA7212.cpp	/^void DA7212::output_softmute(bool enabled) {$/;"	f	class:DA7212
 path_analog	DA7212.h	/^        path_analog = 0x04,$/;"	e	enum:DA7212::reg_address
 path_digital	DA7212.h	/^        path_digital = 0x05,$/;"	e	enum:DA7212::reg_address
+por	DA7212.h	/^    int32_t por;$/;"	m	class:GainConvert
 power	DA7212.cpp	/^void DA7212::power(bool on_off) {$/;"	f	class:DA7212
 power_control	DA7212.h	/^        power_control = 0x06,$/;"	e	enum:DA7212::reg_address
 reg_address	DA7212.h	/^    enum reg_address {$/;"	g	class:DA7212
@@ -285,6 +285,9 @@ reset	DA7212.cpp	/^void DA7212::reset() {$/;"	f	class:DA7212
 reset_reg	DA7212.h	/^        reset_reg = 0x0A,$/;"	e	enum:DA7212::reg_address
 sample_rate	DA7212.h	/^        sample_rate = 0x08,$/;"	e	enum:DA7212::reg_address
 sdt_vol	DA7212.h	/^    float sdt_vol;$/;"	m	class:DA7212
+set	DA7212.h	/^    int set(int gain) {$/;"	f	class:GainConvert
 start	DA7212.cpp	/^void DA7212::start() { interface_switch(true); }$/;"	f	class:DA7212
+step	DA7212.h	/^    int32_t step;$/;"	m	class:GainConvert
 stop	DA7212.cpp	/^void DA7212::stop() { interface_switch(false); }$/;"	f	class:DA7212
+width	DA7212.h	/^    int32_t width;$/;"	m	class:GainConvert
 wordsize	DA7212.cpp	/^void DA7212::wordsize(int words) {$/;"	f	class:DA7212
