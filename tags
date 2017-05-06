@@ -61,9 +61,10 @@ DA721X_SR_8000	DA7212.h	/^        DA721X_SR_8000 = (0x1 << 0),$/;"	e	enum:DA7212
 DA721X_SR_88200	DA7212.h	/^        DA721X_SR_88200 = (0xE << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 DA721X_SR_96000	DA7212.h	/^        DA721X_SR_96000 = (0xF << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 DAC_MAX_VOL	DA7212.h	/^        DAC_MAX_VOL = (DAC_PGA_MAX \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
+DAC_MIN_VOL	DA7212.h	/^        DAC_MIN_VOL = (DAC_PGA_MIN \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MAX	DA7212.h	/^        DAC_PGA_MAX = (1200),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MIN	DA7212.h	/^        DAC_PGA_MIN = (-8325),  \/\/ -78 ~ 12dB$/;"	e	enum:DA7212::DA7212DigitalGain
-DIGITAL_PGA_STEP	DA7212.h	/^        DIGITAL_PGA_STEP = 75$/;"	e	enum:DA7212::DA7212DigitalGain
+DIGITAL_PGA_STEP	DA7212.h	/^        DIGITAL_PGA_STEP = 75,$/;"	e	enum:DA7212::DA7212DigitalGain
 Default_ADC_highpass_enable	DA7212.h	/^        Default_ADC_highpass_enable = 0,$/;"	e	enum:DA7212::DA7212_defaults
 Default_ADC_source	DA7212.h	/^        Default_ADC_source = DA7212_LINE,$/;"	e	enum:DA7212::DA7212_defaults
 Default_LineIn_mute_left	DA7212.h	/^        Default_LineIn_mute_left = 0,$/;"	e	enum:DA7212::DA7212_defaults
@@ -212,6 +213,17 @@ REG_TONE_GEN_OFF_PER	DA7212.h	/^        REG_TONE_GEN_OFF_PER,$/;"	e	enum:DA7212:
 REG_TONE_GEN_ON_PER	DA7212.h	/^        REG_TONE_GEN_ON_PER,$/;"	e	enum:DA7212::DA7212Registers
 SPK_PGA_MAX	DA7212.h	/^        SPK_PGA_MAX = (1500),$/;"	e	enum:DA7212::DA7212SpeakerGain
 SPK_PGA_MIN	DA7212.h	/^        SPK_PGA_MIN = (-4800),  \/\/ -48 ~ 15dB$/;"	e	enum:DA7212::DA7212SpeakerGain
+SR11k	DA7212.h	/^        SR11k = DA721X_SR_11025,$/;"	e	enum:DA7212::DA7212SampleRate
+SR12k	DA7212.h	/^        SR12k = DA721X_SR_12000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR16k	DA7212.h	/^        SR16k = DA721X_SR_16000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR22k	DA7212.h	/^        SR22k = DA721X_SR_22050,$/;"	e	enum:DA7212::DA7212SampleRate
+SR24k	DA7212.h	/^        SR24k = DA721X_SR_24000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR32k	DA7212.h	/^        SR32k = DA721X_SR_32000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR44k	DA7212.h	/^        SR44k = DA721X_SR_44100,$/;"	e	enum:DA7212::DA7212SampleRate
+SR48k	DA7212.h	/^        SR48k = DA721X_SR_48000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR88k	DA7212.h	/^        SR88k = DA721X_SR_88200,$/;"	e	enum:DA7212::DA7212SampleRate
+SR8k	DA7212.h	/^        SR8k = DA721X_SR_8000,$/;"	e	enum:DA7212::DA7212SampleRate
+SR96k	DA7212.h	/^        SR96k = DA721X_SR_96000,$/;"	e	enum:DA7212::DA7212SampleRate
 Sample_rate	DA7212.h	/^    int Sample_rate;$/;"	m	class:DA7212
 address	DA7212.h	/^    uint8_t address;$/;"	m	class:DA7212
 all	DA7212.h	/^        all = 0xFF$/;"	e	enum:DA7212::reg_address

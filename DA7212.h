@@ -57,6 +57,28 @@
 #define DA721X_MUTE_EN (0x40)
 #define DA721X_POWER_EN (0x80)
 
+class GainConvert {
+   public:
+    int32_t min;
+    int32_t max;
+    int32_t step;
+    int32_t por;
+    int32_t mask;
+    int32_t width;
+    GainConvert(int32_t _min, int32_t _max, int32_t _step, int32_t _por, int32_t _mask, int32_t _width) {
+        min = _min;
+        max = _max;
+        step = _step;
+        por = _por;
+        mask = _mask;
+        width = _width;
+    }
+
+    int set(int gain) {
+        int vol = 0;
+        vol = (gain * 100 - min) / step;
+    }
+};
 /** A class to control the I2C part of the DA7212
  * - 12.288MHz MCLK sent from FRDM
  * - BitClk aka. BCLK for DA7212
@@ -350,8 +372,10 @@ class DA7212 {
     enum DA7212MicGain {
         MIC_PGA_MIN = (-600),  // -6dB
         MIC_PGA_MAX = (3600),  // 36dB
-        MIC_PGA_STEP = 600
+        MIC_PGA_STEP = 600,
+        MIC_PGA_POR = 600,
     };
+    GainConvert mic_gain(MIC_PGA_MIN, MIC_PGA_MAX, MIC_PGA_STEP, MIC_PGA_POR, 0xFF, 3);
 
     /**
     150 x (-27~+36):64
@@ -360,8 +384,10 @@ class DA7212 {
     enum DA7212AuxGain {
         AUX_PGA_MIN = (-5400),  // -54dB
         AUX_PGA_MAX = (1500),   // 15dB
-        AUX_PGA_STEP = 150
+        AUX_PGA_STEP = 150,
+        AUX_PGA_POR = 5400,
     };
+    GainConvert aux_gain(AUX_PGA_MIN, AUX_PGA_MAX, AUX_PGA_STEP, AUX_PGA_POR, 0xFF, 6);
 
     /**
     150 x (-3~12):16
@@ -370,8 +396,10 @@ class DA7212 {
     enum DA7212MixerInGain {
         MIXIN_PGA_MIN = (-450),  // -4.5 dB
         MIXIN_PGA_MAX = (1800),  // 18dB
-        MIXIN_PGA_STEP = 150
+        MIXIN_PGA_STEP = 150,
+        MIXIN_PGA_POR = 450,
     };
+    GainConvert mix_in_gain(MIXIN_PGA_MIN, MIXIN_PGA_MAX, MIXIN_PGA_STEP, MIXIN_PGA_POR, 0xFF, 4);
 
     /**
     75 x (-111~16):128
@@ -382,13 +410,16 @@ class DA7212 {
         ADC_PGA_MAX = (1200),
         DAC_PGA_MIN = (-8325),  // -78 ~ 12dB
         DAC_PGA_MAX = (1200),
-        DIGITAL_PGA_STEP = 75
+        DIGITAL_PGA_STEP = 75,
+        DIGITAL_PGA_POR = 8325,
 
         DAC_MIN_VOL = (DAC_PGA_MIN / 100),
         DAC_MAX_VOL = (DAC_PGA_MAX / 100),
         ADC_MIN_VOL = (ADC_PGA_MIN / 100),
         ADC_MAX_VOL = (ADC_PGA_MAX / 100),
     };
+    GainConvert dac_gain(DAC_PGA_MIN, DAC_PGA_MAX, DIGITAL_PGA_STEP, DIGITAL_PGA_POR, 0xFF, 7);
+    GainConvert dac_gain(ADC_PGA_MIN, ADC_PGA_MAX, DIGITAL_PGA_STEP, DIGITAL_PGA_POR, 0xFF, 7);
 
     /**
     1x(-57~+6):64
@@ -396,8 +427,10 @@ class DA7212 {
     */
     enum DA7212HeadPhoneGain {
         HP_PGA_MIN = (-5700),  // -57 ~ 6dB
-        HP_PGA_MAX = (600)
+        HP_PGA_MAX = (600),
+        OUT_PGA_STEP = 100 HP_PGA_POR = 5700,
     };
+    GainConvert hp_gain(HP_PGA_MIN, HP_PGA_MAX, OUT_PGA_STEP, HP_PGA_POR, 0xFF, 6);
 
     /**
     1x(-48~+15):64
@@ -406,22 +439,23 @@ class DA7212 {
     enum DA7212SpeakerGain {
         SPK_PGA_MIN = (-4800),  // -48 ~ 15dB
         SPK_PGA_MAX = (1500),
-        OUT_PGA_STEP = 100
+        SPK_PGA_POR = 4800,
     };
+    GainConvert hp_gain(SPK_PGA_MIN, SPK_PGA_MAX, OUT_PGA_STEP, HP_PGA_POR, 0xFF, 6);
 
     /* REG_SR = r0x22 */
     enum DA7212SampleRate {
-        DA721X_SR_8000 = (0x1 << 0),
-        DA721X_SR_11025 = (0x2 << 0),
-        DA721X_SR_12000 = (0x3 << 0),
-        DA721X_SR_16000 = (0x5 << 0),
-        DA721X_SR_22050 = (0x6 << 0),
-        DA721X_SR_24000 = (0x7 << 0),
-        DA721X_SR_32000 = (0x9 << 0),
-        DA721X_SR_44100 = (0xA << 0),
-        DA721X_SR_48000 = (0xB << 0),
-        DA721X_SR_88200 = (0xE << 0),
-        DA721X_SR_96000 = (0xF << 0),
+        SR8k = (0x1 << 0),
+        SR11k = (0x2 << 0),
+        SR12k = (0x3 << 0),
+        SR16k = (0x5 << 0),
+        SR22k = (0x6 << 0),
+        SR24k = (0x7 << 0),
+        SR32k = (0x9 << 0),
+        SR44k = (0xA << 0),
+        SR48k = (0xB << 0),
+        SR88k = (0xE << 0),
+        SR96k = (0xF << 0),
     };
 
     enum reg_address {
