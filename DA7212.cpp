@@ -30,20 +30,57 @@
 
 #include "DA7212.h"
 
-#define DA7212_HP_VOL_DF_MASK 0x80
-
-#define DA7212_Default_HP_Volume_Left (57)
-#define DA7212_Default_HP_Volume_Right (57)
-#define DA7212_Default_LineIn_Volume_Left (53)
-#define DA7212_Default_LineIn_Volume_Right (53)
-// #define DA7212_DF_sdt_vol                     0
-
 const uint8_t base_address = 0x34;  // 0x1A in 7bit address
 
 DA7212::DA7212(PinName i2c_sda, PinName i2c_scl) : i2c(i2c_sda, i2c_scl) {
     address = base_address;
+    init();
     defaulter();
     form_cmd(all);
+}
+
+void DA7212::init() {
+    mic2_gain.min = mic1_gain.min = MIC_PGA_MIN;
+    mic2_gain.max = mic1_gain.max = MIC_PGA_MAX;
+    mic2_gain.step = mic1_gain.step = MIC_PGA_STEP;
+    mic2_gain.por = mic1_gain.por = MIC_PGA_POR;
+    mic2_gain.mask = mic1_gain.mask = 0x07;
+    mic2_gain.width = mic1_gain.width = 3;
+
+    aux_r_gain.min = aux_l_gain.min = AUX_PGA_MIN;
+    aux_r_gain.max = aux_l_gain.max = AUX_PGA_MAX;
+    aux_r_gain.step = aux_l_gain.step = AUX_PGA_STEP;
+    aux_r_gain.por = aux_l_gain.por = AUX_PGA_POR;
+    aux_r_gain.mask = aux_l_gain.mask = 0x3F;
+    aux_r_gain.width = aux_l_gain.width = 6;
+
+    mix_r_in_gain.min = mix_l_in_gain.min = MIXIN_PGA_MIN;
+    mix_r_in_gain.max = mix_l_in_gain.max = MIXIN_PGA_MAX;
+    mix_r_in_gain.step = mix_l_in_gain.step = MIXIN_PGA_STEP;
+    mix_r_in_gain.por = mix_l_in_gain.por = MIXIN_PGA_POR;
+    mix_r_in_gain.mask = mix_l_in_gain.mask = 0x0F;
+    mix_r_in_gain.width = mix_l_in_gain.width = 4;
+
+    dac_r_gain.min = dac_l_gain.min = DAC_PGA_MIN;
+    dac_r_gain.max = dac_l_gain.max = DAC_PGA_MAX;
+    dac_r_gain.step = dac_l_gain.step = DIGITAL_PGA_STEP;
+    dac_r_gain.por = dac_l_gain.por = DIGITAL_PGA_POR;
+    dac_r_gain.mask = dac_l_gain.mask = 0x7F;
+    dac_r_gain.width = dac_l_gain.width = 7;
+
+    hp_r_gain.min = hp_l_gain.min = HP_PGA_MIN;
+    hp_r_gain.max = hp_l_gain.max = HP_PGA_MAX;
+    hp_r_gain.step = hp_l_gain.step = OUT_PGA_STEP;
+    hp_r_gain.por = hp_l_gain.por = HP_PGA_POR;
+    hp_r_gain.mask = hp_l_gain.mask = 0x3F;
+    hp_r_gain.width = hp_l_gain.width = 6;
+
+    spk_gain.min = SPK_PGA_MIN;
+    spk_gain.max = SPK_PGA_MAX;
+    spk_gain.step = OUT_PGA_STEP;
+    spk_gain.por = SPK_PGA_POR;
+    spk_gain.mask = 0x3F;
+    spk_gain.width = 6;
 }
 
 // DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level) : i2c(i2c_sda, i2c_scl) {
@@ -110,11 +147,11 @@ void DA7212::input_select(int input) {
 //     form_cmd(headphone_vol_left);
 //     form_cmd(headphone_vol_right);
 // }
-void DA7212::headphone_volume(uint8_t h_volume) {
-    hp_vol_left = h_volume & 0x3F;
-    hp_vol_right = h_volume & 0x3F;
-    i2c_register_write(REG_HP_L_GAIN, hp_vol_left);
-    i2c_register_write(REG_HP_R_GAIN, hp_vol_right);
+void DA7212::headphone_volume(int volume) {
+    // hp_vol_left = h_volume & 0x3F;
+    // hp_vol_right = h_volume & 0x3F;
+    i2c_register_write(REG_HP_L_GAIN, set_volume(hp_l_gain, volume));
+    i2c_register_write(REG_HP_R_GAIN, set_volume(hp_r_gain, volume));
 }
 
 // void DA7212::linein_volume(float LineIn_volume) {
@@ -128,19 +165,19 @@ void DA7212::headphone_volume(uint8_t h_volume) {
 // 150 x (-27~+36):64
 // 0b110101 = 53 = 0 dB (default)
 // */
-void DA7212::linein_volume(uint8_t LineIn_volume) {
-    LineIn_vol_left = LineIn_volume & 0x3F;
-    LineIn_vol_right = LineIn_volume & 0x3F;
-    i2c_register_write(REG_AUX_L_GAIN, LineIn_vol_left);
-    i2c_register_write(REG_AUX_R_GAIN, LineIn_vol_right);
+void DA7212::linein_volume(int volume) {
+    // LineIn_vol_left = LineIn_volume & 0x3F;
+    // LineIn_vol_right = LineIn_volume & 0x3F;
+    i2c_register_write(REG_AUX_L_GAIN, set_volume(aux_l_gain, volume));
+    i2c_register_write(REG_AUX_R_GAIN, set_volume(aux_l_gain, volume));
 }
 
 // void DA7212::microphone_boost(bool mic_boost) {
 //     mic_boost_ = mic_boost;
 // }
-void DA7212::microphone_boost(uint8_t mic_boost) {
-    mic_boost = mic_boost & 0x07;
-    i2c_register_write(REG_MIC_1_GAIN, mic_boost);
+void DA7212::microphone_boost(int mic_boost) {
+    // mic_boost = mic_boost & 0x07;
+    i2c_register_write(REG_MIC_1_GAIN, set_volume(mic1_gain, mic_boost));
 }
 // case DA721X_MIC1:  // headset mic
 //     /*
@@ -321,7 +358,7 @@ void DA7212::frequency(int freq) {
     // Sample_rate = freq;
     // ADC_rate = freq;
     // DAC_rate = freq;
-    uint8_t temp = DA721X_SR_32000;
+    uint8_t temp = SR32k;
     uint8_t mixedrate = 0;
     switch (freq) {
         // case 96000:
@@ -631,10 +668,10 @@ void DA7212::form_cmd(reg_address add) {
 }
 
 void DA7212::defaulter() {
-    hp_vol_left = DA7212_Default_HP_Volume_Left;
-    hp_vol_right = DA7212_Default_HP_Volume_Right;
-    LineIn_vol_left = DA7212_Default_LineIn_Volume_Left;
-    LineIn_vol_right = DA7212_Default_LineIn_Volume_Right;
+    hp_vol_left = hp_l_gain.por;
+    hp_vol_right = hp_r_gain.por;
+    LineIn_vol_left = aux_l_gain.por;
+    LineIn_vol_right = aux_r_gain.por;
     // sdt_vol           = DA7212_DF_sdt_vol;
     bypass_ = Default_bypass_;
 

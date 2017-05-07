@@ -57,28 +57,6 @@
 #define DA721X_MUTE_EN (0x40)
 #define DA721X_POWER_EN (0x80)
 
-class GainConvert {
-   public:
-    int32_t min;
-    int32_t max;
-    int32_t step;
-    int32_t por;
-    int32_t mask;
-    int32_t width;
-    GainConvert(int32_t _min, int32_t _max, int32_t _step, int32_t _por, int32_t _mask, int32_t _width) {
-        min = _min;
-        max = _max;
-        step = _step;
-        por = _por;
-        mask = _mask;
-        width = _width;
-    }
-
-    int set(int gain) {
-        int vol = 0;
-        vol = (gain * 100 - min) / step;
-    }
-};
 /** A class to control the I2C part of the DA7212
  * - 12.288MHz MCLK sent from FRDM
  * - BitClk aka. BCLK for DA7212
@@ -116,10 +94,10 @@ class DA7212 {
 
     /** Set the headphone volume
      *
-     * @param h_volume The desired headphone volume: 0->1
+     * @param h_volume The desired headphone volume: -57->+6
      */
     // void headphone_volume(float h_volume);
-    void headphone_volume(uint8_t h_volume);
+    void headphone_volume(int h_volume);
     /*
      * 1x(-57~+6):64
      * 0b111001 = 57 = 0 dB
@@ -127,10 +105,10 @@ class DA7212 {
 
     /** Set the line in pre-amp volume
      *
-     * @param LineIn_volume The desired line in volume: 0->1
+     * @param LineIn_volume The desired line in volume: -27->+36
      */
     // void linein_volume(float LineIn_volume);
-    void linein_volume(uint8_t LineIn_volume);
+    void linein_volume(int LineIn_volume);
     /*
      * 150 x (-27~+36):64
      * 0b110101 = 53 = 0 dB (default)
@@ -138,10 +116,10 @@ class DA7212 {
 
     /** Turn on/off the microphone pre-amp boost
      *
-     * @param mic_boost Boost on or off
+     * @param mic_boost Boost gain -1->+6
      */
     // void microphone_boost(bool mic_boost);
-    void microphone_boost(uint8_t mic_boost);
+    void microphone_boost(int mic_boost);
     /*
     600 x (-1~+6):8
     0b001 = 1 = 0 dB (default)
@@ -375,7 +353,6 @@ class DA7212 {
         MIC_PGA_STEP = 600,
         MIC_PGA_POR = 600,
     };
-    GainConvert mic_gain(MIC_PGA_MIN, MIC_PGA_MAX, MIC_PGA_STEP, MIC_PGA_POR, 0xFF, 3);
 
     /**
     150 x (-27~+36):64
@@ -387,7 +364,6 @@ class DA7212 {
         AUX_PGA_STEP = 150,
         AUX_PGA_POR = 5400,
     };
-    GainConvert aux_gain(AUX_PGA_MIN, AUX_PGA_MAX, AUX_PGA_STEP, AUX_PGA_POR, 0xFF, 6);
 
     /**
     150 x (-3~12):16
@@ -399,7 +375,6 @@ class DA7212 {
         MIXIN_PGA_STEP = 150,
         MIXIN_PGA_POR = 450,
     };
-    GainConvert mix_in_gain(MIXIN_PGA_MIN, MIXIN_PGA_MAX, MIXIN_PGA_STEP, MIXIN_PGA_POR, 0xFF, 4);
 
     /**
     75 x (-111~16):128
@@ -418,8 +393,6 @@ class DA7212 {
         ADC_MIN_VOL = (ADC_PGA_MIN / 100),
         ADC_MAX_VOL = (ADC_PGA_MAX / 100),
     };
-    GainConvert dac_gain(DAC_PGA_MIN, DAC_PGA_MAX, DIGITAL_PGA_STEP, DIGITAL_PGA_POR, 0xFF, 7);
-    GainConvert dac_gain(ADC_PGA_MIN, ADC_PGA_MAX, DIGITAL_PGA_STEP, DIGITAL_PGA_POR, 0xFF, 7);
 
     /**
     1x(-57~+6):64
@@ -428,9 +401,9 @@ class DA7212 {
     enum DA7212HeadPhoneGain {
         HP_PGA_MIN = (-5700),  // -57 ~ 6dB
         HP_PGA_MAX = (600),
-        OUT_PGA_STEP = 100 HP_PGA_POR = 5700,
+        OUT_PGA_STEP = 100,
+        HP_PGA_POR = 5700,
     };
-    GainConvert hp_gain(HP_PGA_MIN, HP_PGA_MAX, OUT_PGA_STEP, HP_PGA_POR, 0xFF, 6);
 
     /**
     1x(-48~+15):64
@@ -441,7 +414,6 @@ class DA7212 {
         SPK_PGA_MAX = (1500),
         SPK_PGA_POR = 4800,
     };
-    GainConvert hp_gain(SPK_PGA_MIN, SPK_PGA_MAX, OUT_PGA_STEP, HP_PGA_POR, 0xFF, 6);
 
     /* REG_SR = r0x22 */
     enum DA7212SampleRate {
@@ -506,6 +478,22 @@ class DA7212 {
         Default_device_interface_active = 0
     };
 
+    typedef struct gain_t {
+        int min;
+        int max;
+        int step;
+        int por;
+        int mask;
+        int width;
+    };
+
+    gain_t mic1_gain, mic2_gain;
+    gain_t aux_l_gain, aux_r_gain;
+    gain_t mix_l_in_gain, mix_r_in_gain;
+    gain_t dac_l_gain, dac_r_gain;
+    gain_t hp_l_gain, hp_r_gain;
+    gain_t spk_gain;
+
     I2C i2c;
     uint8_t address;
     void command(reg_address add, uint16_t byte);
@@ -513,8 +501,17 @@ class DA7212 {
     uint8_t i2c_register_read(DA7212Registers reg);
     void form_cmd(reg_address add);
     void defaulter();
+    void init();
 
     char gen_samplerate();
+    int reset_gain(gain_t gain) { return (gain.por / gain.step); }
+
+    int set_volume(gain_t channel, int gain) {
+        int vol = 0;
+        vol = (gain * 100 - channel.min) / channel.step;
+        vol &= channel.mask;
+        return vol;
+    }
 
     // I2S i2s_tx(I2S_TRANSMIT, p5, p6 , p7);
     // I2S i2s_rx(I2S_RECIEVE , p8, p29, p30);
