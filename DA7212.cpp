@@ -81,6 +81,12 @@ void DA7212::init() {
     spk_gain.por = SPK_PGA_POR;
     spk_gain.mask = 0x3F;
     spk_gain.width = 6;
+
+    mixin_l.dmic = mixin_r.dmic = 0;
+    mixin_l.mixin = mixin_r.mixin = 0;
+    mixin_l.mic1 = mixin_r.mic1 = 0;
+    mixin_l.mic2 = mixin_r.mic2 = 0;
+    mixin_l.aux = mixin_r.aux = 0;
 }
 
 // DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level) : i2c(i2c_sda, i2c_scl) {
@@ -135,11 +141,9 @@ void DA7212::input_select(int input) {
 //         1x(-57~+6):64
 //         0b111001 = 57 = 0 dB
 //         */
-//         i2c_reg_update_bits(REG_HP_L_GAIN, 0x3F,
-//         (vol*100-HP_PGA_MIN)/OUT_PGA_STEP);
-//         i2c_reg_update_bits(REG_HP_R_GAIN, 0x3F,
-//         (vol*100-HP_PGA_MIN)/OUT_PGA_STEP);
-//         break;
+// i2c_reg_update_bits(REG_HP_L_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
+// i2c_reg_update_bits(REG_HP_R_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
+// break;
 
 // void DA7212::headphone_volume(float h_volume) {
 //     hp_vol_left   = h_volume;
@@ -148,8 +152,6 @@ void DA7212::input_select(int input) {
 //     form_cmd(headphone_vol_right);
 // }
 void DA7212::headphone_volume(int volume) {
-    // hp_vol_left = h_volume & 0x3F;
-    // hp_vol_right = h_volume & 0x3F;
     i2c_register_write(REG_HP_L_GAIN, set_volume(hp_l_gain, volume));
     i2c_register_write(REG_HP_R_GAIN, set_volume(hp_r_gain, volume));
 }
@@ -166,8 +168,6 @@ void DA7212::headphone_volume(int volume) {
 // 0b110101 = 53 = 0 dB (default)
 // */
 void DA7212::linein_volume(int volume) {
-    // LineIn_vol_left = LineIn_volume & 0x3F;
-    // LineIn_vol_right = LineIn_volume & 0x3F;
     i2c_register_write(REG_AUX_L_GAIN, set_volume(aux_l_gain, volume));
     i2c_register_write(REG_AUX_R_GAIN, set_volume(aux_l_gain, volume));
 }

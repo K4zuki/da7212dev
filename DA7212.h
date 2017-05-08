@@ -494,6 +494,26 @@ class DA7212 {
     gain_t hp_l_gain, hp_r_gain;
     gain_t spk_gain;
 
+    typedef struct mixin_t {
+        int dmic;
+        int mixin_r;
+        int mic1;
+        int mic2;
+        int aux;
+    };
+
+    mixin_t mixin_l, mixin_r;
+
+    typedef struct mixout_t {
+        int mixinv1;
+        int mixinv2;
+        int auxinv;
+        int dac;
+        int mixin1;
+        int mixin2;
+        int aux;
+    };
+    mixout_t mixout_l, mixout_r;
     I2C i2c;
     uint8_t address;
     void command(reg_address add, uint16_t byte);
@@ -502,10 +522,8 @@ class DA7212 {
     void form_cmd(reg_address add);
     void defaulter();
     void init();
-
     char gen_samplerate();
     int reset_gain(gain_t gain) { return (gain.por / gain.step); }
-
     int set_volume(gain_t channel, int gain) {
         int vol = 0;
         vol = (gain * 100 - channel.min) / channel.step;
