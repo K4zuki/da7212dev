@@ -43,8 +43,9 @@ DA7212_SLAVE	DA7212.h	45;"	d
 DA7212_UNMUTE	DA7212.h	42;"	d
 DA7212_defaults	DA7212.h	/^    enum DA7212_defaults {$/;"	g	class:DA7212
 DA721X_MCLK	DA7212.h	56;"	d
+DA721X_MUTE_DIS	DA7212.h	58;"	d
 DA721X_MUTE_EN	DA7212.h	57;"	d
-DA721X_POWER_EN	DA7212.h	58;"	d
+DA721X_POWER_EN	DA7212.h	59;"	d
 DAC_MAX_VOL	DA7212.h	/^        DAC_MAX_VOL = (DAC_PGA_MAX \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_MIN_VOL	DA7212.h	/^        DAC_MIN_VOL = (DAC_PGA_MIN \/ 100),$/;"	e	enum:DA7212::DA7212DigitalGain
 DAC_PGA_MAX	DA7212.h	/^        DAC_PGA_MAX = (1200),$/;"	e	enum:DA7212::DA7212DigitalGain
@@ -217,11 +218,15 @@ SR96k	DA7212.h	/^        SR96k = (0xF << 0),$/;"	e	enum:DA7212::DA7212SampleRate
 Sample_rate	DA7212.h	/^    int Sample_rate;$/;"	m	class:DA7212
 address	DA7212.h	/^    uint8_t address;$/;"	m	class:DA7212
 all	DA7212.h	/^        all = 0xFF$/;"	e	enum:DA7212::reg_address
+aux	DA7212.h	/^        int aux;$/;"	m	struct:DA7212::mixin_t
+aux	DA7212.h	/^        int aux;$/;"	m	struct:DA7212::mixout_t
 aux_l_gain	DA7212.h	/^    gain_t aux_l_gain, aux_r_gain;$/;"	m	class:DA7212
 aux_r_gain	DA7212.h	/^    gain_t aux_l_gain, aux_r_gain;$/;"	m	class:DA7212
+auxinv	DA7212.h	/^        int auxinv;$/;"	m	struct:DA7212::mixout_t
 base_address	DA7212.cpp	/^const uint8_t base_address = 0x34;  \/\/ 0x1A in 7bit address$/;"	v
 bypass_	DA7212.h	/^    bool bypass_;$/;"	m	class:DA7212
 command	DA7212.cpp	/^void DA7212::command(reg_address add, uint16_t cmd) {$/;"	f	class:DA7212
+dac	DA7212.h	/^        int dac;$/;"	m	struct:DA7212::mixout_t
 dac_l_gain	DA7212.h	/^    gain_t dac_l_gain, dac_r_gain;$/;"	m	class:DA7212
 dac_r_gain	DA7212.h	/^    gain_t dac_l_gain, dac_r_gain;$/;"	m	class:DA7212
 de_emph_code	DA7212.h	/^    char de_emph_code;$/;"	m	class:DA7212
@@ -243,6 +248,7 @@ device_mic_pwr	DA7212.h	/^    bool device_mic_pwr;$/;"	m	class:DA7212
 device_osc_pwr	DA7212.h	/^    bool device_osc_pwr;$/;"	m	class:DA7212
 device_out_pwr	DA7212.h	/^    bool device_out_pwr;$/;"	m	class:DA7212
 device_usb_mode	DA7212.h	/^    static const bool device_usb_mode = false;$/;"	m	class:DA7212
+dmic	DA7212.h	/^        int dmic;$/;"	m	struct:DA7212::mixin_t
 form_cmd	DA7212.cpp	/^void DA7212::form_cmd(reg_address add) {$/;"	f	class:DA7212
 frequency	DA7212.cpp	/^void DA7212::frequency(int freq) {$/;"	f	class:DA7212
 gain_t	DA7212.h	/^    typedef struct gain_t {$/;"	s	class:DA7212
@@ -269,7 +275,9 @@ linein_volume	DA7212.cpp	/^void DA7212::linein_volume(int volume) {$/;"	f	class:
 mask	DA7212.h	/^        int mask;$/;"	m	struct:DA7212::gain_t
 master	DA7212.cpp	/^void DA7212::master(bool master) {$/;"	f	class:DA7212
 max	DA7212.h	/^        int max;$/;"	m	struct:DA7212::gain_t
+mic1	DA7212.h	/^        int mic1;$/;"	m	struct:DA7212::mixin_t
 mic1_gain	DA7212.h	/^    gain_t mic1_gain, mic2_gain;$/;"	m	class:DA7212
+mic2	DA7212.h	/^        int mic2;$/;"	m	struct:DA7212::mixin_t
 mic2_gain	DA7212.h	/^    gain_t mic1_gain, mic2_gain;$/;"	m	class:DA7212
 mic_boost	DA7212.h	/^    uint8_t mic_boost;$/;"	m	class:DA7212
 mic_mute	DA7212.h	/^    bool mic_mute;$/;"	m	class:DA7212
@@ -277,6 +285,17 @@ microphone_boost	DA7212.cpp	/^void DA7212::microphone_boost(int mic_boost) {$/;"
 min	DA7212.h	/^        int min;$/;"	m	struct:DA7212::gain_t
 mix_l_in_gain	DA7212.h	/^    gain_t mix_l_in_gain, mix_r_in_gain;$/;"	m	class:DA7212
 mix_r_in_gain	DA7212.h	/^    gain_t mix_l_in_gain, mix_r_in_gain;$/;"	m	class:DA7212
+mixin	DA7212.h	/^        int mixin;$/;"	m	struct:DA7212::mixin_t
+mixin1	DA7212.h	/^        int mixin1;$/;"	m	struct:DA7212::mixout_t
+mixin2	DA7212.h	/^        int mixin2;$/;"	m	struct:DA7212::mixout_t
+mixin_l	DA7212.h	/^    mixin_t mixin_l, mixin_r;$/;"	m	class:DA7212
+mixin_r	DA7212.h	/^    mixin_t mixin_l, mixin_r;$/;"	m	class:DA7212
+mixin_t	DA7212.h	/^    typedef struct mixin_t {$/;"	s	class:DA7212
+mixinv1	DA7212.h	/^        int mixinv1;$/;"	m	struct:DA7212::mixout_t
+mixinv2	DA7212.h	/^        int mixinv2;$/;"	m	struct:DA7212::mixout_t
+mixout_l	DA7212.h	/^    mixout_t mixout_l, mixout_r;$/;"	m	class:DA7212
+mixout_r	DA7212.h	/^    mixout_t mixout_l, mixout_r;$/;"	m	class:DA7212
+mixout_t	DA7212.h	/^    typedef struct mixout_t {$/;"	s	class:DA7212
 out_mute	DA7212.h	/^    bool out_mute;$/;"	m	class:DA7212
 output_mute	DA7212.cpp	/^void DA7212::output_mute(bool mute) {$/;"	f	class:DA7212
 output_power	DA7212.cpp	/^void DA7212::output_power(bool on_off) {$/;"	f	class:DA7212

@@ -32,7 +32,7 @@
 #define DA7212_H_
 #include "mbed.h"  //NOLINT
 
-#define DA7212_CS_HIGH true
+#define DA7212_CS_HIGH (true)
 #define DA7212_CS_LOW false
 
 #define DA7212_ON true
@@ -55,6 +55,7 @@
 
 #define DA721X_MCLK 12288000
 #define DA721X_MUTE_EN (0x40)
+#define DA721X_MUTE_DIS (0xBF)
 #define DA721X_POWER_EN (0x80)
 
 /** A class to control the I2C part of the DA7212
@@ -70,6 +71,14 @@ class DA7212 {
      * @param i2c_scl The SCL pin of the I2C
      */
     DA7212(PinName i2c_sda, PinName i2c_scl);
+
+    /** Create an instance of the DA7212 class
+     *
+     * @param i2c_sda The SDA pin of the I2C
+     * @param i2c_scl The SCL pin of the I2C
+     * @param i2c_addr 8-bit I2C slave address
+     */
+    DA7212(PinName i2c_sda, PinName i2c_scl, int i2c_addr);
 
     /* Create an instance of the DA7212 class
      *
@@ -93,37 +102,25 @@ class DA7212 {
     void input_select(int input);
 
     /** Set the headphone volume
-     *
-     * @param h_volume The desired headphone volume: -57->+6
-     */
-    // void headphone_volume(float h_volume);
-    void headphone_volume(int h_volume);
-    /*
      * 1x(-57~+6):64
      * 0b111001 = 57 = 0 dB
+     * @param h_volume The desired headphone volume: -57->+6
      */
+    void headphone_volume(int h_volume);
 
     /** Set the line in pre-amp volume
-     *
-     * @param LineIn_volume The desired line in volume: -27->+36
-     */
-    // void linein_volume(float LineIn_volume);
-    void linein_volume(int LineIn_volume);
-    /*
      * 150 x (-27~+36):64
      * 0b110101 = 53 = 0 dB (default)
-    */
+     * @param LineIn_volume The desired line in volume: -27->+36
+     */
+    void linein_volume(int LineIn_volume);
 
     /** Turn on/off the microphone pre-amp boost
-     *
+     * 600 x (-1~+6):8
+     * 0b001 = 1 = 0 dB (default)
      * @param mic_boost Boost gain -1->+6
      */
-    // void microphone_boost(bool mic_boost);
     void microphone_boost(int mic_boost);
-    /*
-    600 x (-1~+6):8
-    0b001 = 1 = 0 dB (default)
-    */
 
     /** Mute the input
      *
@@ -214,7 +211,6 @@ class DA7212 {
      *
      * @param enable Enable the input highpass filter enabled(true)
      */
-
     void adc_highpass(bool enable);
 
     /** Start the device sending/recieving etc
@@ -496,7 +492,7 @@ class DA7212 {
 
     typedef struct mixin_t {
         int dmic;
-        int mixin_r;
+        int mixin;
         int mic1;
         int mic2;
         int aux;
@@ -514,6 +510,7 @@ class DA7212 {
         int aux;
     };
     mixout_t mixout_l, mixout_r;
+
     I2C i2c;
     uint8_t address;
     void command(reg_address add, uint16_t byte);
@@ -529,6 +526,12 @@ class DA7212 {
         vol = (gain * 100 - channel.min) / channel.step;
         vol &= channel.mask;
         return vol;
+    }
+
+    int set_input(mixin_t channel) {
+        int mixin_ = 0;
+        mixin_ = mixin_l.dmic << 7 | mixin_l.mixin << 3 | mixin_l.mic2 << 2 | mixin_l.mic1 << 1 | mixin_l.aux;
+        return mixin_;
     }
 
     // I2S i2s_tx(I2S_TRANSMIT, p5, p6 , p7);

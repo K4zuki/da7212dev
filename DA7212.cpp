@@ -36,8 +36,23 @@ DA7212::DA7212(PinName i2c_sda, PinName i2c_scl) : i2c(i2c_sda, i2c_scl) {
     address = base_address;
     init();
     defaulter();
+
     form_cmd(all);
 }
+
+DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, int i2c_addr) : i2c(i2c_sda, i2c_scl) {
+    address = (uint8_t)i2c_addr;
+    init();
+    defaulter();
+
+    form_cmd(all);
+}
+
+// DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level) : i2c(i2c_sda, i2c_scl) {
+//     address = base_address + (1 * cs_level);
+//     defaulter();
+//     form_cmd(all);
+// }
 
 void DA7212::init() {
     mic2_gain.min = mic1_gain.min = MIC_PGA_MIN;
@@ -87,13 +102,15 @@ void DA7212::init() {
     mixin_l.mic1 = mixin_r.mic1 = 0;
     mixin_l.mic2 = mixin_r.mic2 = 0;
     mixin_l.aux = mixin_r.aux = 0;
-}
 
-// DA7212::DA7212(PinName i2c_sda, PinName i2c_scl, bool cs_level) : i2c(i2c_sda, i2c_scl) {
-//     address = base_address + (1 * cs_level);
-//     defaulter();
-//     form_cmd(all);
-// }
+    mixout_l.mixinv1 = mixout_r.mixinv1 = 0;
+    mixout_l.mixinv2 = mixout_r.mixinv2 = 0;
+    mixout_l.auxinv = mixout_r.auxinv = 0;
+    mixout_l.dac = mixout_r.dac = 0;
+    mixout_l.mixin1 = mixout_r.mixin1 = 0;
+    mixout_l.mixin2 = mixout_r.mixin2 = 0;
+    mixout_l.aux = mixout_r.aux = 0;
+}
 
 void DA7212::power(bool on_off) {
     device_all_pwr = on_off;
@@ -101,132 +118,45 @@ void DA7212::power(bool on_off) {
 }
 
 void DA7212::input_select(int input) {
+    mixin_l.dmic = mixin_r.dmic = 0;
+    mixin_l.mixin = mixin_r.mixin = 0;
+    mixin_l.mic1 = mixin_r.mic1 = 0;
+    mixin_l.mic2 = mixin_r.mic2 = 0;
+    mixin_l.aux = mixin_r.aux = 0;
     switch (input) {
-        // case DA7212_NO_IN:
-        //     device_adc_pwr = false;
-        //     device_mic_pwr = false;
-        //     device_lni_pwr = false;
-        //     form_cmd(power_control);
-        //     break;
-        case DA7212_LINE:
-            device_adc_pwr = true;
-            device_lni_pwr = true;
-            device_mic_pwr = false;
-            ADC_source = DA7212_LINE;
-            form_cmd(power_control);
-            form_cmd(path_analog);
+        case DA7212_NO_IN:
             break;
-        // case DA7212_MIC:
-        //     device_adc_pwr = true;
-        //     device_lni_pwr = false;
-        //     device_mic_pwr = true;
-        //     ADC_source = DA7212_MIC;
-        //     form_cmd(power_control);
-        //     form_cmd(path_analog);
-        //     break;
+        case DA7212_LINE:
+            mixin_l.aux = mixin_r.aux = 1;
+            break;
+        case DA7212_MIC:
+            mixin_l.mic1 = mixin_r.mic1 = 1;
+            mixin_l.mic2 = mixin_r.mic2 = 1;
+            break;
         default:
-            device_adc_pwr = Default_device_adc_pwr;
-            device_mic_pwr = Default_device_mic_pwr;
-            device_lni_pwr = Default_device_lni_pwr;
-            ADC_source = Default_ADC_source;
-            form_cmd(power_control);
-            form_cmd(path_analog);
+            mixin_l.aux = mixin_r.aux = 1;
             break;
     }
+    i2c_register_write(REG_MIXIN_L_CTRL, set_input(mixin_l));
+    i2c_register_write(REG_MIXIN_R_CTRL, set_input(mixin_r));
+    REG_SYSTEM_MODES_INPUT;
     ADC_source_old = ADC_source;
 }
 
-//     case DA721X_HP:
-//         /*
-//         1x(-57~+6):64
-//         0b111001 = 57 = 0 dB
-//         */
-// i2c_reg_update_bits(REG_HP_L_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
-// i2c_reg_update_bits(REG_HP_R_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
-// break;
-
-// void DA7212::headphone_volume(float h_volume) {
-//     hp_vol_left   = h_volume;
-//     hp_vol_right  = h_volume;
-//     form_cmd(headphone_vol_left);
-//     form_cmd(headphone_vol_right);
-// }
 void DA7212::headphone_volume(int volume) {
     i2c_register_write(REG_HP_L_GAIN, set_volume(hp_l_gain, volume));
     i2c_register_write(REG_HP_R_GAIN, set_volume(hp_r_gain, volume));
 }
 
-// void DA7212::linein_volume(float LineIn_volume) {
-//     LineIn_vol_left = LineIn_volume;
-//     LineIn_vol_right = LineIn_volume;
-//     form_cmd(line_in_vol_left);
-//     form_cmd(line_in_vol_right);
-// }
-
-// /**
-// 150 x (-27~+36):64
-// 0b110101 = 53 = 0 dB (default)
-// */
 void DA7212::linein_volume(int volume) {
     i2c_register_write(REG_AUX_L_GAIN, set_volume(aux_l_gain, volume));
     i2c_register_write(REG_AUX_R_GAIN, set_volume(aux_l_gain, volume));
 }
 
-// void DA7212::microphone_boost(bool mic_boost) {
-//     mic_boost_ = mic_boost;
-// }
 void DA7212::microphone_boost(int mic_boost) {
     // mic_boost = mic_boost & 0x07;
     i2c_register_write(REG_MIC_1_GAIN, set_volume(mic1_gain, mic_boost));
 }
-// case DA721X_MIC1:  // headset mic
-//     /*
-//     600 x (-1~+6):8
-//     0b001 = 1 = 0 dB (default)
-//     */
-//     i2c_reg_update_bits(REG_MIC_1_GAIN, 0x07, (vol * 100 - MIC_PGA_MIN) / MIC_PGA_STEP);
-//     break;
-// case DA721X_MIC2:  // onboard unpop mic
-//     /*
-//     600 x (-1~+6):8
-//     0b001 = 1 = 0 dB (default)
-//     */
-//     i2c_reg_update_bits(REG_MIC_2_GAIN, 0x07, (vol * 100 - MIC_PGA_MIN) / MIC_PGA_STEP);
-//     break;
-
-// int da7212_mute_control(enum da7212_endpoint endpoint, int mute) {
-//     printf("da7212_dac_mute_control(%s)\n", mute == 1 ? "mute" : mute == 0 ? "Unmute" : "unknown");
-//     switch (endpoint) {
-//         case DA721X_MIC1:
-//             i2c_reg_update_bits(REG_MIC1_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_MIC2_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         case DA721X_ADC:
-//             i2c_reg_update_bits(REG_ADC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_ADC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         case DA721X_DAC:
-// #ifdef DA7212_SOFTMUTE_EN
-//             i2c_register_write(REG_DAC_FILTERS5, (mute ? 0x80 : 0x00));
-// // SOFT MUTE ON! for DAC
-// #else
-//             i2c_reg_update_bits(REG_DAC_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_DAC_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-// #endif
-//             break;
-//         case DA721X_HP:
-//             i2c_reg_update_bits(REG_HP_L_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             i2c_reg_update_bits(REG_HP_R_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         case DA721X_SPEAKER:
-//             i2c_reg_update_bits(REG_LINE_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
-//             break;
-//         default:
-//             break;
-//     }
-//     // delay HERE if need to remove pop noise.
-//     return 0;
-// }
 
 void DA7212::input_mute(bool mute) {
     uint8_t mask = 0;
@@ -243,7 +173,7 @@ void DA7212::input_mute(bool mute) {
         // form_cmd(path_analog);
         //         case DA721X_MIC1:
         read = i2c_register_read(REG_MIC1_CTRL);
-        read &= (~DA721X_MUTE_EN);
+        read &= DA721X_MUTE_DIS;
         read |= mask;
         // i2c_register_write(REG_MIC1_CTRL, read);
         // i2c_reg_update_bits(REG_MIC1_CTRL, DA721X_MUTE_EN, (mute ? DA721X_MUTE_EN : 0));
@@ -251,11 +181,11 @@ void DA7212::input_mute(bool mute) {
         // break;
     } else {  // DA7212_LINE
         read = i2c_register_read(REG_AUX_L_CTRL);
-        read &= (~DA721X_MUTE_EN);
+        read &= DA721X_MUTE_DIS;
         read |= mask;
         i2c_register_write(REG_AUX_L_CTRL, read);
         read = i2c_register_read(REG_AUX_R_CTRL);
-        read &= (~DA721X_MUTE_EN);
+        read &= DA721X_MUTE_DIS;
         read |= mask;
         i2c_register_write(REG_AUX_R_CTRL, read);
         // LineIn_mute_left = mute;
