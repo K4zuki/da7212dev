@@ -251,7 +251,7 @@ void DA7212::wordsize(int words) {
     // 0x29 DAI_CTRL| DAI_EN[7](0)| DAI_OE[6](0) |DAI_TDM_MODE_EN[5](0)|
     // DAI_MONO_MODE_EN[4](0) | DAI_WORD_LENGTH[3..2](10)| DAI_FORMAT[1..0](00)
     // |
-    uint8_t temp = 3;
+    uint8_t temp = 0;
     switch (words) {
         case 16:
             temp = 0;
@@ -397,80 +397,6 @@ uint8_t DA7212::i2c_register_read(DA7212Registers reg) {
     i2c.read((address | 1), &temp, 1);
     return temp;
 }
-
-// int da7212_set_vol_dB(enum da7212_endpoint endpoint, int vol) {
-//     printf("Endpoint(%d):%ddB\n", endpoint, vol);
-//     if (volume_check(endpoint, vol) < 0) {
-//         return -1;
-//     }
-//
-//     switch (endpoint) {
-//         case DA721X_MIC1:
-//             /*
-//             600 x (-1~+6):8
-//             0b001 = 1 = 0 dB (default)
-//             */
-//             i2c_reg_update_bits(REG_MIC_1_GAIN, 0x07, (vol * 100 - MIC_PGA_MIN) / MIC_PGA_STEP);
-//             break;
-//         case DA721X_MIC2:
-//             /*
-//             600 x (-1~+6):8
-//             0b001 = 1 = 0 dB (default)
-//             */
-//             i2c_reg_update_bits(REG_MIC_2_GAIN, 0x07, (vol * 100 - MIC_PGA_MIN) / MIC_PGA_STEP);
-//             break;
-//         case DA721X_AUX:
-//             /*
-//             150 x (-3~12):16
-//             0b0011 = 3 = 0 dB
-//             */
-//             i2c_reg_update_bits(REG_AUX_L_GAIN, 0x3F, 17 + (vol * 100 - AUX_PGA_MIN) / AUX_PGA_STEP);
-//             i2c_reg_update_bits(REG_AUX_R_GAIN, 0x3F, 17 + (vol * 100 - AUX_PGA_MIN) / AUX_PGA_STEP);
-//             break;
-//         case DA721X_MIXIN:
-//             /*
-//             150 x (-3~12):16
-//             0b0011 = 3 = 0 dB
-//             */
-//             i2c_reg_update_bits(REG_MIXIN_L_GAIN, 0x0F, (vol * 100 - MIXIN_PGA_MIN) / MIXIN_PGA_STEP);
-//             i2c_reg_update_bits(REG_MIXIN_R_GAIN, 0x0F, (vol * 100 - MIXIN_PGA_MIN) / MIXIN_PGA_STEP);
-//             break;
-//         case DA721X_ADC:
-//             /*
-//             75 x (-111~16):128
-//             0b1101111 = 111(decimal!) = 0 dB (default)
-//             */
-//             i2c_reg_update_bits(REG_ADC_L_GAIN, 0x7F, 8 + (vol * 100 - ADC_PGA_MIN) / DIGITAL_PGA_STEP);
-//             i2c_reg_update_bits(REG_ADC_R_GAIN, 0x7F, 8 + (vol * 100 - ADC_PGA_MIN) / DIGITAL_PGA_STEP);
-//             break;
-//         case DA721X_DAC:
-//             /*
-//             75 x (-111~16):128
-//             0b1101111 = 111(decimal!) = 0 dB (default)
-//             */
-//             i2c_reg_update_bits(REG_DAC_L_GAIN, 0x7F, 8 + (vol * 100 - DAC_PGA_MIN) / DIGITAL_PGA_STEP);
-//             i2c_reg_update_bits(REG_DAC_R_GAIN, 0x7F, 8 + (vol * 100 - DAC_PGA_MIN) / DIGITAL_PGA_STEP);
-//             break;
-//         case DA721X_HP:
-//             /*
-//             1x(-57~+6):64
-//             0b111001 = 57 = 0 dB
-//             */
-//             i2c_reg_update_bits(REG_HP_L_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
-//             i2c_reg_update_bits(REG_HP_R_GAIN, 0x3F, (vol * 100 - HP_PGA_MIN) / OUT_PGA_STEP);
-//             break;
-//         case DA721X_SPEAKER:
-//             /*
-//             1x(-48~+15):64
-//             0b110000 = 48 = 0 dB
-//             */
-//             i2c_reg_update_bits(REG_LINE_GAIN, 0x3F, (vol * 100 - SPK_PGA_MIN) / OUT_PGA_STEP);
-//             break;
-//         default:
-//             break;
-//     }
-//     return 0;
-// }
 
 void DA7212::form_cmd(reg_address add) {
     uint16_t cmd = 0;
